@@ -7,6 +7,7 @@ import {
   Globe,
 } from 'lucide-react'
 import Logo from '@/components/logo'
+import { Footer } from '@/components/Footer'
 import { toast } from 'sonner'
 import type { DataSourceMode, FetchProgress } from '@/lib/converters'
 import {
@@ -271,12 +272,15 @@ export function ConverterPage() {
                     <div className="flex flex-col gap-6">
                       <div>
                         <div className="text-xl font-semibold ">
-                          {converter.name} {t('converter.memosExport').replace('Memos ', '')}
+                          {converter.name}{' '}
+                          {t('converter.memosExport').replace('Memos ', '')}
                         </div>
                         <div className="font-light mt-1">
                           {typeof converter.description === 'string'
                             ? converter.description
-                            : getCurrentLanguage() === 'zh' ? converter.description.zh : converter.description.en}
+                            : getCurrentLanguage() === 'zh'
+                              ? converter.description.zh
+                              : converter.description.en}
                         </div>
                       </div>
 
@@ -321,7 +325,9 @@ export function ConverterPage() {
                                     <Input
                                       id="api-url"
                                       type="url"
-                                      placeholder={t('converter.memosUrlPlaceholder')}
+                                      placeholder={t(
+                                        'converter.memosUrlPlaceholder',
+                                      )}
                                       value={apiBaseUrl}
                                       onChange={(e) =>
                                         setApiBaseUrl(e.target.value)
@@ -341,7 +347,9 @@ export function ConverterPage() {
                                     <Input
                                       id="api-token"
                                       type="password"
-                                      placeholder={t('converter.accessTokenPlaceholder')}
+                                      placeholder={t(
+                                        'converter.accessTokenPlaceholder',
+                                      )}
                                       value={apiToken}
                                       onChange={(e) =>
                                         setApiToken(e.target.value)
@@ -355,9 +363,12 @@ export function ConverterPage() {
                                     <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
                                       <Globe className="h-4 w-4 mt-0.5 shrink-0" />
                                       <div>
-                                        {typeof converter.apiDescription === 'string'
+                                        {typeof converter.apiDescription ===
+                                        'string'
                                           ? converter.apiDescription
-                                          : getCurrentLanguage() === 'zh' ? converter.apiDescription.zh : converter.apiDescription.en}
+                                          : getCurrentLanguage() === 'zh'
+                                            ? converter.apiDescription.zh
+                                            : converter.apiDescription.en}
                                       </div>
                                     </div>
                                   )}
@@ -393,7 +404,9 @@ export function ConverterPage() {
                                 <Input
                                   id="api-url"
                                   type="url"
-                                  placeholder={t('converter.memosUrlPlaceholder')}
+                                  placeholder={t(
+                                    'converter.memosUrlPlaceholder',
+                                  )}
                                   value={apiBaseUrl}
                                   onChange={(e) =>
                                     setApiBaseUrl(e.target.value)
@@ -413,7 +426,9 @@ export function ConverterPage() {
                                 <Input
                                   id="api-token"
                                   type="password"
-                                  placeholder={t('converter.accessTokenPlaceholder')}
+                                  placeholder={t(
+                                    'converter.accessTokenPlaceholder',
+                                  )}
                                   value={apiToken}
                                   onChange={(e) => setApiToken(e.target.value)}
                                 />
@@ -425,9 +440,12 @@ export function ConverterPage() {
                                 <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
                                   <Globe className="h-4 w-4 mt-0.5 shrink-0" />
                                   <div>
-                                    {typeof converter.apiDescription === 'string'
+                                    {typeof converter.apiDescription ===
+                                    'string'
                                       ? converter.apiDescription
-                                      : getCurrentLanguage() === 'zh' ? converter.apiDescription.zh : converter.apiDescription.en}
+                                      : getCurrentLanguage() === 'zh'
+                                        ? converter.apiDescription.zh
+                                        : converter.apiDescription.en}
                                   </div>
                                 </div>
                               )}
@@ -512,7 +530,9 @@ export function ConverterPage() {
                     converter.usageInstructions
                   const currentSteps = Array.isArray(steps)
                     ? steps
-                    : (getCurrentLanguage() === 'zh' ? steps.zh : steps.en)
+                    : getCurrentLanguage() === 'zh'
+                      ? steps.zh
+                      : steps.en
                   if (Array.isArray(currentSteps)) {
                     return (
                       <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
@@ -533,9 +553,12 @@ export function ConverterPage() {
                                           ? t('converter.apiMode')
                                           : t('converter.fileMode')}
                                       </strong>
-                                      ：{typeof option.description === 'string'
+                                      ：
+                                      {typeof option.description === 'string'
                                         ? option.description
-                                        : (getCurrentLanguage() === 'zh' ? option.description.zh : option.description.en)}
+                                        : getCurrentLanguage() === 'zh'
+                                          ? option.description.zh
+                                          : option.description.en}
                                     </li>
                                   ))}
                                 </ul>
@@ -556,8 +579,8 @@ export function ConverterPage() {
                       {t('usage.step2')}：
                       <ul className="list-disc pl-5 mt-1 space-y-1">
                         <li>
-                          <strong>{t('converter.apiMode')}</strong>
-                          ：{t('usage.apiOption')}
+                          <strong>{t('converter.apiMode')}</strong>：
+                          {t('usage.apiOption')}
                         </li>
                         <li>
                           <strong>{t('converter.fileMode')}</strong>：
@@ -572,6 +595,8 @@ export function ConverterPage() {
                 )
               })()}
             </Card>
+
+            <Footer />
           </div>
         </div>
 
@@ -586,7 +611,9 @@ export function ConverterPage() {
                     <AlertTriangle className="size-5" />
                   )}
                   <div className="text-lg font-semibold">
-                    {conversionResult.success ? t('converter.convertSuccess') : t('converter.convertComplete')}
+                    {conversionResult.success
+                      ? t('converter.convertSuccess')
+                      : t('converter.convertComplete')}
                   </div>
                 </div>
 
@@ -601,19 +628,25 @@ export function ConverterPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.total}
                     </div>
-                    <div className="text-xs text-muted-foreground">{t('converter.totalRecords')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('converter.totalRecords')}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.converted}
                     </div>
-                    <div className="text-xs text-muted-foreground">{t('converter.successRecords')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('converter.successRecords')}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.failed}
                     </div>
-                    <div className="text-xs text-muted-foreground">{t('converter.failedRecords')}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t('converter.failedRecords')}
+                    </div>
                   </div>
                 </div>
 
