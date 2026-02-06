@@ -127,9 +127,12 @@ function FieldTitle({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
-function FieldDescription({ className, ...props }: React.ComponentProps<'p'>) {
+function FieldDescription({
+  className,
+  ...props
+}: React.ComponentProps<'div'>) {
   return (
-    <p
+    <div
       data-slot="field-description"
       className={cn(
         'text-muted-foreground text-left text-sm [[data-variant=legend]+&]:-mt-1.5 leading-normal font-normal group-has-data-horizontal/field:text-balance',
@@ -161,12 +164,12 @@ function FieldSeparator({
     >
       <Separator className="absolute inset-0 top-1/2" />
       {children && (
-        <span
+        <div
           className="text-muted-foreground px-2 bg-background relative mx-auto block w-fit"
           data-slot="field-separator-content"
         >
           {children}
-        </span>
+        </div>
       )}
     </div>
   )
@@ -193,7 +196,7 @@ function FieldError({
       ...new Map(errors.map((error) => [error?.message, error])).values(),
     ]
 
-    if (uniqueErrors?.length == 1) {
+    if (uniqueErrors.length == 1) {
       return uniqueErrors[0]?.message
     }
 

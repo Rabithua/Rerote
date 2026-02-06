@@ -102,14 +102,14 @@ function DropdownMenuCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span
+      <div
         className="absolute right-2 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <DropdownMenuPrimitive.ItemIndicator>
           <CheckIcon />
         </DropdownMenuPrimitive.ItemIndicator>
-      </span>
+      </div>
       {children}
     </DropdownMenuPrimitive.CheckboxItem>
   )
@@ -144,14 +144,14 @@ function DropdownMenuRadioItem({
       )}
       {...props}
     >
-      <span
+      <div
         className="absolute right-2 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <DropdownMenuPrimitive.ItemIndicator>
           <CheckIcon />
         </DropdownMenuPrimitive.ItemIndicator>
-      </span>
+      </div>
       {children}
     </DropdownMenuPrimitive.RadioItem>
   )
@@ -193,9 +193,9 @@ function DropdownMenuSeparator({
 function DropdownMenuShortcut({
   className,
   ...props
-}: React.ComponentProps<'span'>) {
+}: React.ComponentProps<'div'>) {
   return (
-    <span
+    <div
       data-slot="dropdown-menu-shortcut"
       className={cn(
         'text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground ml-auto text-xs tracking-widest',
