@@ -20,16 +20,16 @@ export type DataSourceMode = 'file' | 'api'
 export interface Converter {
   platform: Platform
   name: string
-  description: string
+  description: string | { zh: string; en: string }
   convert: (data: any, selectedUserId?: number) => ConversionResult
   validate: (data: any) => boolean
   supportedModes: Array<DataSourceMode>
-  apiDescription?: string
+  apiDescription?: string | { zh: string; en: string }
   usageInstructions?: {
-    steps: Array<string>
+    steps: Array<string> | { zh: Array<string>; en: Array<string> }
     dataSourceOptions?: Array<{
       mode: DataSourceMode
-      description: string
+      description: string | { zh: string; en: string }
     }>
   }
 }
@@ -38,7 +38,10 @@ export const converters: Array<Converter> = [
   {
     platform: Platform.MEMOS,
     name: 'Memos',
-    description: '转换 Memos 数据到 Rote 格式',
+    description: {
+      zh: '转换 Memos 数据到 Rote 格式',
+      en: 'Convert Memos data to Rote format',
+    },
     convert: convertMemosToRote,
     validate: (data: any): data is MemoSourceData | SQLiteSourceData => {
       // 验证 JSON 格式
@@ -58,23 +61,41 @@ export const converters: Array<Converter> = [
       return false
     },
     supportedModes: ['api', 'file'],
-    apiDescription: '通过 Memos API 获取数据，需要提供实例地址和 Access Token',
+    apiDescription: {
+      zh: '通过 Memos API 获取数据，需要提供实例地址和 Access Token',
+      en: 'Fetch data through Memos API, requires instance address and Access Token',
+    },
     usageInstructions: {
-      steps: [
-        '选择您要转换的笔记平台（目前支持 Memos）',
-        '选择数据的来源方式',
-        '点击开始转换按钮，等待处理完成',
-        '下载转换后的 Rote 格式数据文件',
-        '在 Rote 应用中导入该文件即可',
-      ],
+      steps: {
+        zh: [
+          '选择您要转换的笔记平台（目前支持 Memos）',
+          '选择数据的来源方式',
+          '点击开始转换按钮，等待处理完成',
+          '下载转换后的 Rote 格式数据文件',
+          '在 Rote 应用中导入该文件即可',
+        ],
+        en: [
+          'Select the note platform you want to convert (currently supports Memos)',
+          'Select the data source method',
+          'Click the start conversion button and wait for processing to complete',
+          'Download the converted Rote format data file',
+          'Import the file in the Rote app',
+        ],
+      },
       dataSourceOptions: [
         {
           mode: 'api',
-          description: '直接连接您的 Memos 实例获取数据（推荐）',
+          description: {
+            zh: '直接连接您的 Memos 实例获取数据（推荐）',
+            en: 'Connect directly to your Memos instance to fetch data (recommended)',
+          },
         },
         {
           mode: 'file',
-          description: '上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）',
+          description: {
+            zh: '上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）',
+            en: 'Upload Memos SQLite database file (.db, .sqlite, .sqlite3)',
+          },
         },
       ],
     },

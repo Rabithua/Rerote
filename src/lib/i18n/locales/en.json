@@ -1,0 +1,76 @@
+{
+  "common": {
+    "appName": "Rerote",
+    "dataMigration": "Data Migration",
+    "convertData": "Convert data from other note platforms to Rote format for easy migration.",
+    "close": "Close",
+    "download": "Download",
+    "downloadFile": "Download File",
+    "confirm": "Confirm",
+    "select": "Select"
+  },
+  "converter": {
+    "memos": "Memos",
+    "memosExport": "Memos Export Conversion",
+    "memosDescription": "Convert Memos data to Rote format",
+    "selectDataSource": "Select Data Source",
+    "apiMode": "Fetch via API",
+    "fileMode": "Upload File",
+    "apiDescription": "Fetch data through Memos API, requires instance address and Access Token",
+    "memosUrl": "Memos Instance URL",
+    "memosUrlPlaceholder": "e.g., https://memos.example.com",
+    "memosUrlHint": "Enter your Memos instance address without trailing slash",
+    "accessToken": "Access Token",
+    "accessTokenPlaceholder": "Enter your Access Token",
+    "accessTokenHint": "Create in Memos Settings → My Account → Access Token",
+    "startConvert": "Start Fetching and Converting",
+    "startConvertFile": "Start Converting Data",
+    "converting": "Converting...",
+    "fetchingAndConverting": "Fetching and Converting...",
+    "convertSuccess": "Conversion Successful",
+    "convertComplete": "Conversion Complete",
+    "convertSuccessMessage": "Your data has been successfully converted to Rote format. Please download the file and import it into the app.",
+    "convertCompleteMessage": "There were some issues during conversion. Please check the detailed statistics below.",
+    "totalRecords": "Total Records",
+    "successRecords": "Success",
+    "failedRecords": "Failed",
+    "errorDetails": "Error Details",
+    "warnings": "Warnings",
+    "conversionStats": "Conversion Statistics"
+  },
+  "fileUpload": {
+    "selectFile": "Click to select a file or drag and drop here",
+    "supportedFormats": "Supports {{formats}} format"
+  },
+  "userSelector": {
+    "selectUser": "Select User to Convert",
+    "selectUserDescription": "Please select the user whose memos you want to export",
+    "confirmSelection": "Confirm Selection",
+    "noNickname": "No nickname"
+  },
+  "usage": {
+    "title": "Usage Instructions",
+    "step1": "Select the note platform you want to convert (currently supports Memos)",
+    "step2": "Select the data source method",
+    "step3": "Click the start conversion button and wait for processing to complete",
+    "step4": "Download the converted Rote format data file",
+    "step5": "Import the file in the Rote app",
+    "apiOption": "API Fetch: Connect directly to instance to fetch data (recommended)",
+    "fileOption": "File Upload: Upload data file",
+    "memosApiOption": "API Fetch: Connect directly to your Memos instance to fetch data (recommended)",
+    "memosFileOption": "File Upload: Upload Memos SQLite database file (.db, .sqlite, .sqlite3)"
+  },
+  "errors": {
+    "noConverter": "No corresponding converter found",
+    "invalidData": "Invalid data format",
+    "unsupportedFileFormat": "Unsupported file format",
+    "noUserData": "No user data found in database"
+  },
+  "toast": {
+    "convertSuccess": "Conversion completed! Successfully converted {{count}} records"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

@@ -3,6 +3,7 @@ import { FileText, Upload, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { useTranslation } from 'react-i18next'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -13,6 +14,7 @@ export function FileUpload({
   onFileSelect,
   acceptedFormats = '.db,.sqlite,.sqlite3',
 }: FileUploadProps) {
+  const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -42,10 +44,10 @@ export function FileUpload({
             <Upload className="size-8" />
             <div>
               <div className="text-sm font-medium text-gray-900">
-                点击选择文件或拖拽文件到此处
+                {t('fileUpload.selectFile')}
               </div>
               <div className="text-xs font-light mt-1">
-                支持 {acceptedFormats} 格式
+                {t('fileUpload.supportedFormats', { formats: acceptedFormats })}
               </div>
             </div>
             <Input

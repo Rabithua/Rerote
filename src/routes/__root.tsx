@@ -5,6 +5,7 @@ import { Toaster } from 'sonner'
 
 import appCss from '../styles.css?url'
 import { NotFound } from '../components/not-found'
+import '@/lib/i18n/config' // 导入 i18n 配置
 
 export const Route = createRootRoute({
   head: () => ({

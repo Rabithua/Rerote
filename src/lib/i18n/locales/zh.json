@@ -1,0 +1,76 @@
+{
+  "common": {
+    "appName": "Rerote",
+    "dataMigration": "数据迁移",
+    "convertData": "将其他笔记平台的数据转换为 Rote 格式，轻松完成迁移。",
+    "close": "关闭",
+    "download": "下载",
+    "downloadFile": "下载文件",
+    "confirm": "确认",
+    "select": "选择"
+  },
+  "converter": {
+    "memos": "Memos",
+    "memosExport": "Memos 导出转换",
+    "memosDescription": "转换 Memos 数据到 Rote 格式",
+    "selectDataSource": "选择数据源",
+    "apiMode": "通过 API 获取",
+    "fileMode": "上传文件",
+    "apiDescription": "通过 Memos API 获取数据，需要提供实例地址和 Access Token",
+    "memosUrl": "Memos 实例地址",
+    "memosUrlPlaceholder": "例如：https://memos.example.com",
+    "memosUrlHint": "输入您的 Memos 实例地址，不需要加末尾斜杠",
+    "accessToken": "Access Token",
+    "accessTokenPlaceholder": "输入您的 Access Token",
+    "accessTokenHint": "在 Memos 设置 → 我的账户 → Access Token 中创建",
+    "startConvert": "开始获取并转换",
+    "startConvertFile": "开始转换数据",
+    "converting": "转换中...",
+    "fetchingAndConverting": "获取并转换中...",
+    "convertSuccess": "转换成功",
+    "convertComplete": "转换完成",
+    "convertSuccessMessage": "您的数据已成功转换为 Rote 格式，请下载文件并导入应用。",
+    "convertCompleteMessage": "转换过程中出现了一些问题，请查看下方的详细统计。",
+    "totalRecords": "总记录",
+    "successRecords": "成功",
+    "failedRecords": "失败",
+    "errorDetails": "错误详情",
+    "warnings": "警告",
+    "conversionStats": "转换统计"
+  },
+  "fileUpload": {
+    "selectFile": "点击选择文件或拖拽文件到此处",
+    "supportedFormats": "支持 {{formats}} 格式"
+  },
+  "userSelector": {
+    "selectUser": "选择要转换的用户",
+    "selectUserDescription": "请选择您要导出其备忘录的用户",
+    "confirmSelection": "确认选择",
+    "noNickname": "无昵称"
+  },
+  "usage": {
+    "title": "使用说明",
+    "step1": "选择您要转换的笔记平台（目前支持 Memos）",
+    "step2": "选择数据的来源方式",
+    "step3": "点击开始转换按钮，等待处理完成",
+    "step4": "下载转换后的 Rote 格式数据文件",
+    "step5": "在 Rote 应用中导入该文件即可",
+    "apiOption": "API 获取：直接连接实例获取数据（推荐）",
+    "fileOption": "文件上传：上传数据文件",
+    "memosApiOption": "API 获取：直接连接您的 Memos 实例获取数据（推荐）",
+    "memosFileOption": "文件上传：上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）"
+  },
+  "errors": {
+    "noConverter": "未找到对应的转换器",
+    "invalidData": "数据格式无效",
+    "unsupportedFileFormat": "不支持的文件格式",
+    "noUserData": "数据库中未找到用户数据"
+  },
+  "toast": {
+    "convertSuccess": "转换完成！成功转换 {{count}} 条记录"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

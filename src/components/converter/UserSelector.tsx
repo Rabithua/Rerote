@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from 'react-i18next'
 
 interface UserSelectorProps {
   users: Array<UserType>
@@ -18,15 +19,17 @@ export function UserSelector({
   onUserSelect,
   onConfirm,
 }: UserSelectorProps) {
+  const { t } = useTranslation()
+
   return (
     <Card className="p-6 bg-foreground/5">
       <div className="space-y-4">
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900">
-            选择要转换的用户
+            {t('userSelector.selectUser')}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            请选择您要导出其备忘录的用户
+            {t('userSelector.selectUserDescription')}
           </p>
         </div>
 
@@ -59,7 +62,7 @@ export function UserSelector({
                       {user.username}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {user.nickname || '无昵称'}
+                      {user.nickname || t('userSelector.noNickname')}
                     </div>
                   </div>
                 </div>
@@ -76,7 +79,7 @@ export function UserSelector({
           disabled={selectedUserId === null}
           className="w-full"
         >
-          确认选择
+          {t('userSelector.confirmSelection')}
         </Button>
       </div>
     </Card>

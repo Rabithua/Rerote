@@ -29,8 +29,12 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
 } from '@/components/ui/alert-dialog'
+import { useTranslation } from 'react-i18next'
+import { getCurrentLanguage } from '@/lib/i18n/config'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 export function ConverterPage() {
+  const { t } = useTranslation()
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>(
     Platform.MEMOS,
   )
@@ -58,7 +62,7 @@ export function ConverterPage() {
   const handleConvert = useCallback(async () => {
     const converter = getConverter(selectedPlatform)
     if (!converter) {
-      toast.error('未找到对应的转换器')
+      toast.error(t('errors.noConverter'))
       return
     }
 
@@ -95,7 +99,7 @@ export function ConverterPage() {
           setSqliteData(data)
 
           if (data.users.length === 0) {
-            throw new Error('数据库中未找到用户数据')
+            throw new Error(t('errors.noUserData'))
           }
 
           if (data.users.length === 1) {
@@ -106,7 +110,7 @@ export function ConverterPage() {
 
             if (result.success) {
               toast.success(
-                `转换完成！成功转换 ${result.stats.converted} 条记录`,
+                t('toast.convertSuccess', { count: result.stats.converted }),
               )
             }
             setIsConverting(false) // 成功完成后重置加载状态
@@ -117,7 +121,7 @@ export function ConverterPage() {
             return
           }
         } else {
-          throw new Error('不支持的文件格式')
+          throw new Error(t('errors.unsupportedFileFormat'))
         }
       }
 
@@ -128,7 +132,7 @@ export function ConverterPage() {
           file!.name.toLowerCase().endsWith('.json'))
       ) {
         if (!converter.validate(data)) {
-          throw new Error('数据格式无效')
+          throw new Error(t('errors.invalidData'))
         }
 
         const result = converter.convert(data)
@@ -146,7 +150,9 @@ export function ConverterPage() {
           })
         }
         if (result.success) {
-          toast.success(`转换完成！成功转换 ${result.stats.converted} 条记录`)
+          toast.success(
+            t('toast.convertSuccess', { count: result.stats.converted }),
+          )
         }
       }
 
@@ -218,20 +224,21 @@ export function ConverterPage() {
   return (
     <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex gap-2">
               <Logo className="h-8 w-fit " color="#07C160" />
               <div className="text-3xl font-semibold tracking-tight ">
                 {' '}
-                | 数据迁移
+                | {t('common.dataMigration')}
               </div>
             </div>
 
             <div className="mt-2 text-lg font-light">
-              将其他笔记平台的数据转换为 Rote 格式，轻松完成迁移。
+              {t('common.convertData')}
             </div>
           </div>
+          <LanguageSwitcher />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -264,10 +271,12 @@ export function ConverterPage() {
                     <div className="flex flex-col gap-6">
                       <div>
                         <div className="text-xl font-semibold ">
-                          {converter.name} 导出转换
+                          {converter.name} {t('converter.memosExport').replace('Memos ', '')}
                         </div>
                         <div className="font-light mt-1">
-                          {converter.description}
+                          {typeof converter.description === 'string'
+                            ? converter.description
+                            : getCurrentLanguage() === 'zh' ? converter.description.zh : converter.description.en}
                         </div>
                       </div>
 
@@ -275,7 +284,7 @@ export function ConverterPage() {
                       {converter.supportedModes.length > 1 && (
                         <div className="space-y-3">
                           <Label className="text-sm font-medium ">
-                            选择数据源
+                            {t('converter.selectDataSource')}
                           </Label>
                           <Tabs
                             value={dataSourceMode}
@@ -288,11 +297,13 @@ export function ConverterPage() {
                             <TabsList className="bg-muted/50">
                               {converter.supportedModes.includes('api') && (
                                 <TabsTrigger value="api">
-                                  通过 API 获取
+                                  {t('converter.apiMode')}
                                 </TabsTrigger>
                               )}
                               {converter.supportedModes.includes('file') && (
-                                <TabsTrigger value="file">上传文件</TabsTrigger>
+                                <TabsTrigger value="file">
+                                  {t('converter.fileMode')}
+                                </TabsTrigger>
                               )}
                             </TabsList>
 
@@ -305,19 +316,19 @@ export function ConverterPage() {
                                       htmlFor="api-url"
                                       className="text-sm font-medium "
                                     >
-                                      Memos 实例地址
+                                      {t('converter.memosUrl')}
                                     </Label>
                                     <Input
                                       id="api-url"
                                       type="url"
-                                      placeholder="例如：https://memos.example.com"
+                                      placeholder={t('converter.memosUrlPlaceholder')}
                                       value={apiBaseUrl}
                                       onChange={(e) =>
                                         setApiBaseUrl(e.target.value)
                                       }
                                     />
                                     <div className="text-xs font-light">
-                                      输入您的 Memos 实例地址，不需要加末尾斜杠
+                                      {t('converter.memosUrlHint')}
                                     </div>
                                   </div>
                                   <div className="space-y-2">
@@ -325,26 +336,29 @@ export function ConverterPage() {
                                       htmlFor="api-token"
                                       className="text-sm font-medium "
                                     >
-                                      Access Token
+                                      {t('converter.accessToken')}
                                     </Label>
                                     <Input
                                       id="api-token"
                                       type="password"
-                                      placeholder="输入您的 Access Token"
+                                      placeholder={t('converter.accessTokenPlaceholder')}
                                       value={apiToken}
                                       onChange={(e) =>
                                         setApiToken(e.target.value)
                                       }
                                     />
                                     <div className="text-xs font-light">
-                                      在 Memos 设置 → 我的账户 → Access Token
-                                      中创建
+                                      {t('converter.accessTokenHint')}
                                     </div>
                                   </div>
                                   {converter.apiDescription && (
                                     <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
                                       <Globe className="h-4 w-4 mt-0.5 shrink-0" />
-                                      <div>{converter.apiDescription}</div>
+                                      <div>
+                                        {typeof converter.apiDescription === 'string'
+                                          ? converter.apiDescription
+                                          : getCurrentLanguage() === 'zh' ? converter.apiDescription.zh : converter.apiDescription.en}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
@@ -374,19 +388,19 @@ export function ConverterPage() {
                                   htmlFor="api-url"
                                   className="text-sm font-medium "
                                 >
-                                  Memos 实例地址
+                                  {t('converter.memosUrl')}
                                 </Label>
                                 <Input
                                   id="api-url"
                                   type="url"
-                                  placeholder="例如：https://memos.example.com"
+                                  placeholder={t('converter.memosUrlPlaceholder')}
                                   value={apiBaseUrl}
                                   onChange={(e) =>
                                     setApiBaseUrl(e.target.value)
                                   }
                                 />
                                 <div className="text-xs font-light">
-                                  输入您的 Memos 实例地址，不需要加末尾斜杠
+                                  {t('converter.memosUrlHint')}
                                 </div>
                               </div>
                               <div className="space-y-2">
@@ -394,23 +408,27 @@ export function ConverterPage() {
                                   htmlFor="api-token"
                                   className="text-sm font-medium "
                                 >
-                                  Access Token
+                                  {t('converter.accessToken')}
                                 </Label>
                                 <Input
                                   id="api-token"
                                   type="password"
-                                  placeholder="输入您的 Access Token"
+                                  placeholder={t('converter.accessTokenPlaceholder')}
                                   value={apiToken}
                                   onChange={(e) => setApiToken(e.target.value)}
                                 />
                                 <div className="text-xs font-light">
-                                  在 Memos 设置 → 我的账户 → Access Token 中创建
+                                  {t('converter.accessTokenHint')}
                                 </div>
                               </div>
                               {converter.apiDescription && (
                                 <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
                                   <Globe className="h-4 w-4 mt-0.5 shrink-0" />
-                                  <div>{converter.apiDescription}</div>
+                                  <div>
+                                    {typeof converter.apiDescription === 'string'
+                                      ? converter.apiDescription
+                                      : getCurrentLanguage() === 'zh' ? converter.apiDescription.zh : converter.apiDescription.en}
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -461,14 +479,14 @@ export function ConverterPage() {
                               <>
                                 <div className="animate-spin mr-2 h-4 w-4 border-4 border-current border-t-transparent rounded-full" />
                                 {dataSourceMode === 'api'
-                                  ? '获取并转换中...'
-                                  : '转换中...'}
+                                  ? t('converter.fetchingAndConverting')
+                                  : t('converter.converting')}
                               </>
                             ) : (
                               <>
                                 {dataSourceMode === 'api'
-                                  ? '开始获取并转换'
-                                  : '开始转换数据'}
+                                  ? t('converter.startConvert')
+                                  : t('converter.startConvertFile')}
 
                                 <ArrowRight className="ml-2 h-4 w-4" />
                               </>
@@ -485,17 +503,20 @@ export function ConverterPage() {
 
           <div className="lg:col-span-4 space-y-6">
             <Card className="p-4 gap-2">
-              <div className="text-lg font-semibold">使用说明</div>
+              <div className="text-lg font-semibold">{t('usage.title')}</div>
               {(() => {
                 const converter = getConverter(selectedPlatform)
                 // 确保 converter 和 usageInstructions 存在
                 if (converter && converter.usageInstructions) {
                   const { steps, dataSourceOptions } =
                     converter.usageInstructions
-                  if (Array.isArray(steps)) {
+                  const currentSteps = Array.isArray(steps)
+                    ? steps
+                    : (getCurrentLanguage() === 'zh' ? steps.zh : steps.en)
+                  if (Array.isArray(currentSteps)) {
                     return (
                       <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
-                        {steps.map((step, index) => {
+                        {currentSteps.map((step, index) => {
                           if (
                             index === 1 &&
                             dataSourceOptions &&
@@ -503,16 +524,18 @@ export function ConverterPage() {
                           ) {
                             return (
                               <li key={index}>
-                                选择数据的来源方式：
+                                {t('usage.step2')}：
                                 <ul className="list-disc pl-5 mt-1 space-y-1">
                                   {dataSourceOptions.map((option) => (
                                     <li key={option.mode}>
                                       <strong>
                                         {option.mode === 'api'
-                                          ? 'API 获取'
-                                          : '文件上传'}
+                                          ? t('converter.apiMode')
+                                          : t('converter.fileMode')}
                                       </strong>
-                                      ：{option.description}
+                                      ：{typeof option.description === 'string'
+                                        ? option.description
+                                        : (getCurrentLanguage() === 'zh' ? option.description.zh : option.description.en)}
                                     </li>
                                   ))}
                                 </ul>
@@ -528,22 +551,23 @@ export function ConverterPage() {
                 // 默认使用说明（兼容其他平台）
                 return (
                   <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
-                    <li>选择您要转换的笔记平台</li>
+                    <li>{t('usage.step1')}</li>
                     <li>
-                      选择数据的来源方式：
+                      {t('usage.step2')}：
                       <ul className="list-disc pl-5 mt-1 space-y-1">
                         <li>
-                          <strong>API 获取</strong>
-                          ：直接连接实例获取数据（推荐）
+                          <strong>{t('converter.apiMode')}</strong>
+                          ：{t('usage.apiOption')}
                         </li>
                         <li>
-                          <strong>文件上传</strong>：上传数据文件
+                          <strong>{t('converter.fileMode')}</strong>：
+                          {t('usage.fileOption')}
                         </li>
                       </ul>
                     </li>
-                    <li>点击开始转换按钮，等待处理完成</li>
-                    <li>下载转换后的 Rote 格式数据文件</li>
-                    <li>在 Rote 应用中导入该文件即可</li>
+                    <li>{t('usage.step3')}</li>
+                    <li>{t('usage.step4')}</li>
+                    <li>{t('usage.step5')}</li>
                   </ol>
                 )
               })()}
@@ -562,14 +586,14 @@ export function ConverterPage() {
                     <AlertTriangle className="size-5" />
                   )}
                   <div className="text-lg font-semibold">
-                    {conversionResult.success ? '转换成功' : '转换完成'}
+                    {conversionResult.success ? t('converter.convertSuccess') : t('converter.convertComplete')}
                   </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground">
                   {conversionResult.success
-                    ? '您的数据已成功转换为 Rote 格式，请下载文件并导入应用。'
-                    : '转换过程中出现了一些问题，请查看下方的详细统计。'}
+                    ? t('converter.convertSuccessMessage')
+                    : t('converter.convertCompleteMessage')}
                 </div>
 
                 <div className="flex gap-6">
@@ -577,19 +601,19 @@ export function ConverterPage() {
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.total}
                     </div>
-                    <div className="text-xs text-muted-foreground">总记录</div>
+                    <div className="text-xs text-muted-foreground">{t('converter.totalRecords')}</div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.converted}
                     </div>
-                    <div className="text-xs text-muted-foreground">成功</div>
+                    <div className="text-xs text-muted-foreground">{t('converter.successRecords')}</div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="text-2xl font-bold tabular-nums">
                       {conversionResult.stats.failed}
                     </div>
-                    <div className="text-xs text-muted-foreground">失败</div>
+                    <div className="text-xs text-muted-foreground">{t('converter.failedRecords')}</div>
                   </div>
                 </div>
 
@@ -597,7 +621,7 @@ export function ConverterPage() {
                 {conversionResult.errors.length > 0 && (
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-red-600">
-                      错误详情
+                      {t('converter.errorDetails')}
                     </div>
                     <div className="text-xs text-red-500 bg-red-50 rounded-lg p-3 max-h-60 overflow-y-auto font-light">
                       <ul className="space-y-1 list-disc pl-4">
@@ -615,7 +639,7 @@ export function ConverterPage() {
                 {conversionResult.warnings.length > 0 && (
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-yellow-600">
-                      警告
+                      {t('converter.warnings')}
                     </div>
                     <div className="text-xs text-yellow-500 bg-yellow-50 font-light rounded-lg p-3 max-h-60 overflow-y-auto">
                       <ul className="space-y-1 list-disc pl-4">
@@ -630,11 +654,11 @@ export function ConverterPage() {
                 )}
 
                 <div className="flex gap-2">
-                  <AlertDialogCancel>关闭</AlertDialogCancel>
+                  <AlertDialogCancel>{t('common.close')}</AlertDialogCancel>
                   {conversionResult?.success && (
                     <AlertDialogAction onClick={handleDownload}>
                       <Download className="mr-2 h-4 w-4" />
-                      下载文件
+                      {t('common.downloadFile')}
                     </AlertDialogAction>
                   )}
                 </div>

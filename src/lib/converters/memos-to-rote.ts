@@ -7,6 +7,8 @@ import type {
   SQLiteSourceData,
 } from './types'
 
+import { getCurrentLanguage } from '@/lib/i18n/config'
+
 export function convertMemosToRote(
   data: MemoSourceData | SQLiteSourceData,
   selectedUserId?: number,
@@ -20,9 +22,10 @@ export function convertMemosToRote(
     // JSON 格式（保持原样）
     return convertFromJSON(data)
   } else {
+    const lang = getCurrentLanguage()
     return {
       success: false,
-      errors: ['无效的数据格式'],
+      errors: [lang === 'zh' ? '无效的数据格式' : 'Invalid data format'],
       warnings: [],
       stats: {
         total: 0,
@@ -58,15 +61,20 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
     }
   })
 
+  const lang = getCurrentLanguage()
   if (localAttachmentsSkipped > 0) {
     warnings.push(
-      `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。请将附件上传到云存储后重新导出。`,
+      lang === 'zh'
+        ? `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。请将附件上传到云存储后重新导出。`
+        : `Detected ${localAttachmentsSkipped} locally stored attachments skipped because Rote does not support local storage. Please upload attachments to cloud storage and re-export.`,
     )
   }
 
   if (emptyContentWithoutAttachmentsCount > 0) {
     warnings.push(
-      `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`,
+      lang === 'zh'
+        ? `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`
+        : `Detected ${emptyContentWithoutAttachmentsCount} records with no attachments and empty content, their content has been discarded.`,
     )
   }
 
@@ -94,10 +102,11 @@ function convertFromSQLite(
   let localAttachmentsSkipped = 0
 
   // 确保必要的数据字段存在
+  const lang = getCurrentLanguage()
   if (!data.memos || !Array.isArray(data.memos)) {
     return {
       success: false,
-      errors: ['数据库中没有找到备忘录数据'],
+      errors: [lang === 'zh' ? '数据库中没有找到备忘录数据' : 'No memo data found in database'],
       warnings: [],
       stats: {
         total: 0,
@@ -111,7 +120,7 @@ function convertFromSQLite(
   if (!data.users || !Array.isArray(data.users)) {
     return {
       success: false,
-      errors: ['数据库中没有找到用户数据'],
+      errors: [lang === 'zh' ? '数据库中没有找到用户数据' : 'No user data found in database'],
       warnings: [],
       stats: {
         total: 0,
@@ -137,7 +146,7 @@ function convertFromSQLite(
   if (filteredMemos.length === 0) {
     return {
       success: false,
-      errors: ['未找到要转换的备忘录数据'],
+      errors: [lang === 'zh' ? '未找到要转换的备忘录数据' : 'No memo data to convert found'],
       warnings: [],
       stats: {
         total: 0,
@@ -213,13 +222,17 @@ function convertFromSQLite(
 
   if (localAttachmentsSkipped > 0) {
     warnings.push(
-      `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。`,
+      lang === 'zh'
+        ? `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。`
+        : `Detected ${localAttachmentsSkipped} locally stored attachments skipped because Rote does not support local storage.`,
     )
   }
 
   if (emptyContentWithoutAttachmentsCount > 0) {
     warnings.push(
-      `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`,
+      lang === 'zh'
+        ? `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`
+        : `Detected ${emptyContentWithoutAttachmentsCount} records with no attachments and empty content, their content has been discarded.`,
     )
   }
 
