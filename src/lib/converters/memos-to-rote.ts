@@ -3,12 +3,13 @@ import type { ConversionResult, Memo, MemoSourceData, RoteNote, SQLiteSourceData
 
 export function convertMemosToRote(data: MemoSourceData | SQLiteSourceData, selectedUserId?: number): ConversionResult {
   // 检查数据类型，区分是 JSON 还是 SQLite 格式
-  if ('memos' in data && Array.isArray(data.memos)) {
-    // JSON 格式（保持原样）
-    return convertFromJSON(data as MemoSourceData)
-  } else if ('users' in data && 'memos' in data) {
+  // SQLite 格式有 users 属性，JSON 格式没有
+  if ('users' in data && 'memos' in data) {
     // SQLite 格式
     return convertFromSQLite(data as SQLiteSourceData, selectedUserId)
+  } else if ('memos' in data && Array.isArray(data.memos)) {
+    // JSON 格式（保持原样）
+    return convertFromJSON(data as MemoSourceData)
   } else {
     return {
       success: false,
@@ -291,9 +292,12 @@ function isLocalStorageAttachment(att: any): boolean {
 }
 
 function convertAttachments(attachments: Array<any>): ConvertAttachmentsResult {
+  // 确保 attachments 是数组
+  const safeAttachments = Array.isArray(attachments) ? attachments : []
+
   // 过滤掉本地存储的附件
-  const localAttachments = attachments.filter(isLocalStorageAttachment)
-  const remoteAttachments = attachments.filter(
+  const localAttachments = safeAttachments.filter(isLocalStorageAttachment)
+  const remoteAttachments = safeAttachments.filter(
     (att) => !isLocalStorageAttachment(att),
   )
 
