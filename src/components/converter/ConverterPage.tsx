@@ -44,7 +44,6 @@ export function ConverterPage() {
   const [sqliteData, setSqliteData] = useState<any>(null)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [showUserSelector, setShowUserSelector] = useState(false)
-  const [isLoadingSQLite, setIsLoadingSQLite] = useState(false)
 
   // API 模式相关状态
   const [apiBaseUrl, setApiBaseUrl] = useState('')
@@ -92,10 +91,8 @@ export function ConverterPage() {
           fileName.endsWith('.sqlite3')
         ) {
           // SQLite 文件处理
-          setIsLoadingSQLite(true)
           data = await readSQLiteFile(file!)
           setSqliteData(data)
-          setIsLoadingSQLite(false)
 
           if (data.users.length === 0) {
             throw new Error('数据库中未找到用户数据')
@@ -112,6 +109,7 @@ export function ConverterPage() {
                 `转换完成！成功转换 ${result.stats.converted} 条记录`,
               )
             }
+            setIsConverting(false) // 成功完成后重置加载状态
           } else {
             // 多个用户，显示选择界面
             setShowUserSelector(true)
@@ -151,10 +149,11 @@ export function ConverterPage() {
           toast.success(`转换完成！成功转换 ${result.stats.converted} 条记录`)
         }
       }
+
+      setIsConverting(false) // 成功完成后重置加载状态
     } catch (error) {
       toast.error((error as Error).message)
       setIsConverting(false)
-      setIsLoadingSQLite(false)
     }
   }, [selectedPlatform, dataSourceMode, file, apiBaseUrl, apiToken])
 
@@ -266,91 +265,143 @@ export function ConverterPage() {
                           <Label className="text-sm font-medium ">
                             选择数据源
                           </Label>
-                          <div className="flex gap-4">
+                          <Tabs
+                            value={dataSourceMode}
+                            onValueChange={(value) => setDataSourceMode(value as DataSourceMode)}
+                            className="w-full"
+                          >
+                            <TabsList className="bg-muted/50">
+                              {converter.supportedModes.includes('api') && (
+                                <TabsTrigger value="api">
+                                  通过 API 获取
+                                </TabsTrigger>
+                              )}
+                              {converter.supportedModes.includes('file') && (
+                                <TabsTrigger value="file">
+                                  上传文件
+                                </TabsTrigger>
+                              )}
+                            </TabsList>
+
+                            {/* API 模式配置 */}
                             {converter.supportedModes.includes('api') && (
-                              <Button
-                                variant={
-                                  dataSourceMode === 'api'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                onClick={() => setDataSourceMode('api')}
-                                className="justify-start"
-                              >
-                                通过 API 获取
-                              </Button>
+                              <TabsContent value="api" className="mt-4">
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label
+                                      htmlFor="api-url"
+                                      className="text-sm font-medium "
+                                    >
+                                      Memos 实例地址
+                                    </Label>
+                                    <Input
+                                      id="api-url"
+                                      type="url"
+                                      placeholder="例如：https://memos.example.com"
+                                      value={apiBaseUrl}
+                                      onChange={(e) => setApiBaseUrl(e.target.value)}
+                                    />
+                                    <div className="text-xs font-light">
+                                      输入您的 Memos 实例地址，不需要加末尾斜杠
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label
+                                      htmlFor="api-token"
+                                      className="text-sm font-medium "
+                                    >
+                                      Access Token
+                                    </Label>
+                                    <Input
+                                      id="api-token"
+                                      type="password"
+                                      placeholder="输入您的 Access Token"
+                                      value={apiToken}
+                                      onChange={(e) => setApiToken(e.target.value)}
+                                    />
+                                    <div className="text-xs font-light">
+                                      在 Memos 设置 → 我的账户 → Access Token 中创建
+                                    </div>
+                                  </div>
+                                  {converter.apiDescription && (
+                                    <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
+                                      <Globe className="h-4 w-4 mt-0.5 shrink-0" />
+                                      <div>{converter.apiDescription}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              </TabsContent>
                             )}
+
+                            {/* 文件上传模式 */}
                             {converter.supportedModes.includes('file') && (
-                              <Button
-                                variant={
-                                  dataSourceMode === 'file'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                onClick={() => setDataSourceMode('file')}
-                                className="justify-start"
-                              >
-                                上传文件
-                              </Button>
+                              <TabsContent value="file" className="mt-4">
+                                <FileUpload
+                                  onFileSelect={handleFileSelect}
+                                  acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                                />
+                              </TabsContent>
                             )}
-                          </div>
+                          </Tabs>
                         </div>
                       )}
 
-                      {/* API 模式配置 */}
-                      {dataSourceMode === 'api' && (
+                      {/* 单一数据源模式显示 */}
+                      {converter.supportedModes.length === 1 && (
                         <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor="api-url"
-                              className="text-sm font-medium "
-                            >
-                              Memos 实例地址
-                            </Label>
-                            <Input
-                              id="api-url"
-                              type="url"
-                              placeholder="例如：https://memos.example.com"
-                              value={apiBaseUrl}
-                              onChange={(e) => setApiBaseUrl(e.target.value)}
-                            />
-                            <div className="text-xs font-light">
-                              输入您的 Memos 实例地址，不需要加末尾斜杠
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label
-                              htmlFor="api-token"
-                              className="text-sm font-medium "
-                            >
-                              Access Token
-                            </Label>
-                            <Input
-                              id="api-token"
-                              type="password"
-                              placeholder="输入您的 Access Token"
-                              value={apiToken}
-                              onChange={(e) => setApiToken(e.target.value)}
-                            />
-                            <div className="text-xs font-light">
-                              在 Memos 设置 → 我的账户 → Access Token 中创建
-                            </div>
-                          </div>
-                          {converter.apiDescription && (
-                            <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
-                              <Globe className="h-4 w-4 mt-0.5 shrink-0" />
-                              <div>{converter.apiDescription}</div>
+                          {converter.supportedModes.includes('api') && (
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor="api-url"
+                                  className="text-sm font-medium "
+                                >
+                                  Memos 实例地址
+                                </Label>
+                                <Input
+                                  id="api-url"
+                                  type="url"
+                                  placeholder="例如：https://memos.example.com"
+                                  value={apiBaseUrl}
+                                  onChange={(e) => setApiBaseUrl(e.target.value)}
+                                />
+                                <div className="text-xs font-light">
+                                  输入您的 Memos 实例地址，不需要加末尾斜杠
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor="api-token"
+                                  className="text-sm font-medium "
+                                >
+                                  Access Token
+                                </Label>
+                                <Input
+                                  id="api-token"
+                                  type="password"
+                                  placeholder="输入您的 Access Token"
+                                  value={apiToken}
+                                  onChange={(e) => setApiToken(e.target.value)}
+                                />
+                                <div className="text-xs font-light">
+                                  在 Memos 设置 → 我的账户 → Access Token 中创建
+                                </div>
+                              </div>
+                              {converter.apiDescription && (
+                                <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
+                                  <Globe className="h-4 w-4 mt-0.5 shrink-0" />
+                                  <div>{converter.apiDescription}</div>
+                                </div>
+                              )}
                             </div>
                           )}
+                          {converter.supportedModes.includes('file') && (
+                            <FileUpload
+                              onFileSelect={handleFileSelect}
+                              acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                            />
+                          )}
                         </div>
-                      )}
-
-                      {/* 文件上传模式 */}
-                      {dataSourceMode === 'file' && (
-                        <FileUpload
-                          onFileSelect={handleFileSelect}
-                          acceptedFormats=".db,.sqlite,.sqlite3,.json"
-                        />
                       )}
 
                       {/* 获取进度 */}
@@ -382,18 +433,8 @@ export function ConverterPage() {
                         />
                       )}
 
-                      {/* SQLite 加载状态 */}
-                      {isLoadingSQLite && (
-                        <div className="text-center py-8">
-                          <div className="animate-spin h-8 w-8 border-4 border-gray-500 border-t-transparent rounded-full mx-auto mb-4" />
-                          <div className="text-sm text-gray-500">
-                            正在加载数据库...
-                          </div>
-                        </div>
-                      )}
-
                       {/* 转换按钮 */}
-                      {!showUserSelector && !isLoadingSQLite && (
+                      {!showUserSelector && (
                         <div className="pt-4">
                           <Button
                             size="lg"
@@ -550,11 +591,11 @@ export function ConverterPage() {
                     </div>
                     <div className="text-xs text-red-500 bg-red-50 rounded-lg p-3 max-h-60 overflow-y-auto font-light">
                       <ul className="space-y-1 list-disc pl-4">
-                        {conversionResult.errors
-                          .splice(0, 5)
-                          .map((error: string, index: number) => (
+                        {conversionResult.errors.map(
+                          (error: string, index: number) => (
                             <li key={index}>{error}</li>
-                          ))}
+                          ),
+                        )}
                       </ul>
                     </div>
                   </div>
