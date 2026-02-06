@@ -18,10 +18,35 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Rerote - Data Conversion Tool',
+      },
+      {
+        name: 'description',
+        content: 'Convert data from various platforms to Rote format. Easy data migration tool.',
+      },
+      {
+        name: 'keywords',
+        content: 'data conversion, migration, Rote, Memos, export, import',
+      },
+      {
+        property: 'og:title',
+        content: 'Rerote - Data Conversion Tool',
+      },
+      {
+        property: 'og:description',
+        content: 'Convert data from various platforms to Rote format. Easy data migration tool.',
+      },
+      {
+        property: 'og:type',
+        content: 'website',
       },
     ],
     links: [
+      {
+        rel: 'icon',
+        href: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌱</text></svg>',
+        type: 'image/svg+xml',
+      },
       {
         rel: 'stylesheet',
         href: appCss,
