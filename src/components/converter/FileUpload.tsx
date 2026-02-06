@@ -11,7 +11,7 @@ interface FileUploadProps {
 
 export function FileUpload({
   onFileSelect,
-  acceptedFormats = '.json',
+  acceptedFormats = '.db,.sqlite,.sqlite3',
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)

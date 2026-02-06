@@ -14,9 +14,10 @@ import {
   fetchMemosFromApi,
   getConverter,
 } from '@/lib/converters'
-import { downloadJSON, readJSONFile } from '@/lib/utils/file'
+import { downloadJSON, readJSONFile, readSQLiteFile } from '@/lib/utils/file'
 import { FileUpload } from '@/components/converter/FileUpload'
 import { ProgressBar } from '@/components/converter/ProgressBar'
+import { UserSelector } from '@/components/converter/UserSelector'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -38,6 +39,12 @@ export function ConverterPage() {
   const [conversionResult, setConversionResult] = useState<any>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [showResultDialog, setShowResultDialog] = useState(false)
+
+  // SQLite 模式相关状态
+  const [sqliteData, setSqliteData] = useState<any>(null)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [showUserSelector, setShowUserSelector] = useState(false)
+  const [isLoadingSQLite, setIsLoadingSQLite] = useState(false)
 
   // API 模式相关状态
   const [apiBaseUrl, setApiBaseUrl] = useState('')
@@ -75,14 +82,85 @@ export function ConverterPage() {
         )
       } else {
         // 从文件读取数据
-        data = await readJSONFile(file!)
+        const fileName = file!.name.toLowerCase()
+        if (fileName.endsWith('.json')) {
+          // JSON 文件处理（保持原样）
+          data = await readJSONFile(file!)
+        } else if (fileName.endsWith('.db') || fileName.endsWith('.sqlite') || fileName.endsWith('.sqlite3')) {
+          // SQLite 文件处理
+          setIsLoadingSQLite(true)
+          data = await readSQLiteFile(file!)
+          setSqliteData(data)
+          setIsLoadingSQLite(false)
+
+          if (data.users.length === 0) {
+            throw new Error('数据库中未找到用户数据')
+          }
+
+          if (data.users.length === 1) {
+            // 只有一个用户，直接转换
+            const result = converter.convert(data, data.users[0].id)
+            setConversionResult(result)
+            setShowResultDialog(true)
+
+            if (result.success) {
+              toast.success(`转换完成！成功转换 ${result.stats.converted} 条记录`)
+            }
+          } else {
+            // 多个用户，显示选择界面
+            setShowUserSelector(true)
+            setIsConverting(false) // 等待用户选择
+            return
+          }
+        } else {
+          throw new Error('不支持的文件格式')
+        }
       }
 
-      if (!converter.validate(data)) {
-        throw new Error('数据格式无效')
+      // 继续处理 JSON 和单个用户的 SQLite 转换
+      if (dataSourceMode === 'api' || (dataSourceMode === 'file' && file!.name.toLowerCase().endsWith('.json'))) {
+        if (!converter.validate(data)) {
+          throw new Error('数据格式无效')
+        }
+
+        const result = converter.convert(data)
+        setConversionResult(result)
+        setShowResultDialog(true)
+
+        if (result.errors.length > 0) {
+          result.errors.forEach((error) => {
+            toast.error(error)
+          })
+        }
+        if (result.warnings.length > 0) {
+          result.warnings.forEach((warning) => {
+            toast.warning(warning, { duration: 8000 })
+          })
+        }
+        if (result.success) {
+          toast.success(`转换完成！成功转换 ${result.stats.converted} 条记录`)
+        }
+      }
+    } catch (error) {
+      toast.error((error as Error).message)
+      setIsConverting(false)
+      setIsLoadingSQLite(false)
+    }
+  }, [selectedPlatform, dataSourceMode, file, apiBaseUrl, apiToken])
+
+  const handleUserConfirm = useCallback(async () => {
+    if (selectedUserId === null || !sqliteData) return
+
+    setShowUserSelector(false)
+    setIsConverting(true)
+
+    try {
+      const converter = getConverter(selectedPlatform)
+      if (!converter) {
+        throw new Error('未找到对应的转换器')
       }
 
-      const result = converter.convert(data)
+      const result = converter.convert(sqliteData, selectedUserId)
       setConversionResult(result)
       setShowResultDialog(true)
 
@@ -103,9 +181,8 @@ export function ConverterPage() {
       toast.error((error as Error).message)
     } finally {
       setIsConverting(false)
-      setFetchProgress(null)
     }
-  }, [selectedPlatform, dataSourceMode, file, apiBaseUrl, apiToken])
+  }, [selectedUserId, sqliteData, selectedPlatform])
 
   const handleDownload = useCallback(() => {
     if (!conversionResult || !conversionResult.data) return
@@ -262,7 +339,7 @@ export function ConverterPage() {
                       {dataSourceMode === 'file' && (
                         <FileUpload
                           onFileSelect={handleFileSelect}
-                          acceptedFormats=".json"
+                          acceptedFormats=".db,.sqlite,.sqlite3,.json"
                         />
                       )}
 
@@ -285,36 +362,57 @@ export function ConverterPage() {
                         </div>
                       )}
 
-                      <div className="pt-4">
-                        <Button
-                          size="lg"
-                          onClick={handleConvert}
-                          disabled={
-                            (dataSourceMode === 'file' && !file) ||
-                            (dataSourceMode === 'api' &&
-                              (!apiBaseUrl || !apiToken)) ||
-                            isConverting
-                          }
-                          className="w-full sm:w-auto"
-                        >
-                          {isConverting ? (
-                            <>
-                              <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                              {dataSourceMode === 'api'
-                                ? '获取并转换中...'
-                                : '转换中...'}
-                            </>
-                          ) : (
-                            <>
-                              {dataSourceMode === 'api'
-                                ? '开始获取并转换'
-                                : '开始转换数据'}
+                      {/* 用户选择界面 */}
+                      {showUserSelector && sqliteData && (
+                        <UserSelector
+                          users={sqliteData.users}
+                          selectedUserId={selectedUserId}
+                          onUserSelect={setSelectedUserId}
+                          onConfirm={handleUserConfirm}
+                        />
+                      )}
 
-                              <ArrowRight className="ml-2 h-4 w-4" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                      {/* SQLite 加载状态 */}
+                      {isLoadingSQLite && (
+                        <div className="text-center py-8">
+                          <div className="animate-spin h-8 w-8 border-2 border-gray-500 border-t-transparent rounded-full mx-auto mb-4" />
+                          <div className="text-sm text-gray-500">正在加载数据库...</div>
+                        </div>
+                      )}
+
+                      {/* 转换按钮 */}
+                      {!showUserSelector && !isLoadingSQLite && (
+                        <div className="pt-4">
+                          <Button
+                            size="lg"
+                            onClick={handleConvert}
+                            disabled={
+                              (dataSourceMode === 'file' && !file) ||
+                              (dataSourceMode === 'api' &&
+                                (!apiBaseUrl || !apiToken)) ||
+                              isConverting
+                            }
+                            className="w-full sm:w-auto"
+                          >
+                            {isConverting ? (
+                              <>
+                                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                {dataSourceMode === 'api'
+                                  ? '获取并转换中...'
+                                  : '转换中...'}
+                              </>
+                            ) : (
+                              <>
+                                {dataSourceMode === 'api'
+                                  ? '开始获取并转换'
+                                  : '开始转换数据'}
+
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </TabsContent>
@@ -335,7 +433,7 @@ export function ConverterPage() {
                       实例获取数据（推荐）
                     </li>
                     <li>
-                      <strong>文件上传</strong>：上传导出的 JSON 数据文件
+                      <strong>文件上传</strong>：上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）
                     </li>
                   </ul>
                 </li>

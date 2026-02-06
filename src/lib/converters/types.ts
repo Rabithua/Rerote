@@ -3,6 +3,54 @@ export interface MemoSourceData {
   nextPageToken: string
 }
 
+export interface SQLiteSourceData {
+  users: Array<User>
+  memos: Array<SQLiteMemo>
+  attachments: Array<SQLiteAttachment>
+}
+
+export interface User {
+  id: number
+  created_ts: number
+  updated_ts: number
+  row_status: string
+  username: string
+  role: string
+  email: string
+  nickname: string
+  avatar_url: string
+  description: string
+}
+
+export interface SQLiteMemo {
+  id: number
+  uid: string
+  creator_id: number
+  created_ts: number
+  updated_ts: number
+  row_status: string
+  content: string
+  visibility: string
+  pinned: boolean
+  payload: any
+}
+
+export interface SQLiteAttachment {
+  id: number
+  uid: string
+  creator_id: number
+  created_ts: number
+  updated_ts: number
+  filename: string
+  blob: any
+  type: string
+  size: number
+  memo_id: number
+  storage_type: string
+  reference: string
+  payload: any
+}
+
 export interface Memo {
   name: string
   state: string
