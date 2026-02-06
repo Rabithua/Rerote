@@ -86,7 +86,11 @@ export function ConverterPage() {
         if (fileName.endsWith('.json')) {
           // JSON 文件处理（保持原样）
           data = await readJSONFile(file!)
-        } else if (fileName.endsWith('.db') || fileName.endsWith('.sqlite') || fileName.endsWith('.sqlite3')) {
+        } else if (
+          fileName.endsWith('.db') ||
+          fileName.endsWith('.sqlite') ||
+          fileName.endsWith('.sqlite3')
+        ) {
           // SQLite 文件处理
           setIsLoadingSQLite(true)
           data = await readSQLiteFile(file!)
@@ -104,7 +108,9 @@ export function ConverterPage() {
             setShowResultDialog(true)
 
             if (result.success) {
-              toast.success(`转换完成！成功转换 ${result.stats.converted} 条记录`)
+              toast.success(
+                `转换完成！成功转换 ${result.stats.converted} 条记录`,
+              )
             }
           } else {
             // 多个用户，显示选择界面
@@ -118,7 +124,11 @@ export function ConverterPage() {
       }
 
       // 继续处理 JSON 和单个用户的 SQLite 转换
-      if (dataSourceMode === 'api' || (dataSourceMode === 'file' && file!.name.toLowerCase().endsWith('.json'))) {
+      if (
+        dataSourceMode === 'api' ||
+        (dataSourceMode === 'file' &&
+          file!.name.toLowerCase().endsWith('.json'))
+      ) {
         if (!converter.validate(data)) {
           throw new Error('数据格式无效')
         }
@@ -375,8 +385,10 @@ export function ConverterPage() {
                       {/* SQLite 加载状态 */}
                       {isLoadingSQLite && (
                         <div className="text-center py-8">
-                          <div className="animate-spin h-8 w-8 border-2 border-gray-500 border-t-transparent rounded-full mx-auto mb-4" />
-                          <div className="text-sm text-gray-500">正在加载数据库...</div>
+                          <div className="animate-spin h-8 w-8 border-4 border-gray-500 border-t-transparent rounded-full mx-auto mb-4" />
+                          <div className="text-sm text-gray-500">
+                            正在加载数据库...
+                          </div>
                         </div>
                       )}
 
@@ -396,7 +408,7 @@ export function ConverterPage() {
                           >
                             {isConverting ? (
                               <>
-                                <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                <div className="animate-spin mr-2 h-4 w-4 border-4 border-current border-t-transparent rounded-full" />
                                 {dataSourceMode === 'api'
                                   ? '获取并转换中...'
                                   : '转换中...'}
@@ -427,19 +439,29 @@ export function ConverterPage() {
                 const converter = getConverter(selectedPlatform)
                 // 确保 converter 和 usageInstructions 存在
                 if (converter && converter.usageInstructions) {
-                  const { steps, dataSourceOptions } = converter.usageInstructions
+                  const { steps, dataSourceOptions } =
+                    converter.usageInstructions
                   if (Array.isArray(steps)) {
                     return (
                       <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
                         {steps.map((step, index) => {
-                          if (index === 1 && dataSourceOptions && Array.isArray(dataSourceOptions)) {
+                          if (
+                            index === 1 &&
+                            dataSourceOptions &&
+                            Array.isArray(dataSourceOptions)
+                          ) {
                             return (
                               <li key={index}>
                                 选择数据的来源方式：
                                 <ul className="list-disc pl-5 mt-1 space-y-1">
                                   {dataSourceOptions.map((option) => (
                                     <li key={option.mode}>
-                                      <strong>{option.mode === 'api' ? 'API 获取' : '文件上传'}</strong>：{option.description}
+                                      <strong>
+                                        {option.mode === 'api'
+                                          ? 'API 获取'
+                                          : '文件上传'}
+                                      </strong>
+                                      ：{option.description}
                                     </li>
                                   ))}
                                 </ul>
@@ -460,7 +482,8 @@ export function ConverterPage() {
                       选择数据的来源方式：
                       <ul className="list-disc pl-5 mt-1 space-y-1">
                         <li>
-                          <strong>API 获取</strong>：直接连接实例获取数据（推荐）
+                          <strong>API 获取</strong>
+                          ：直接连接实例获取数据（推荐）
                         </li>
                         <li>
                           <strong>文件上传</strong>：上传数据文件
@@ -518,6 +541,42 @@ export function ConverterPage() {
                     <div className="text-xs text-muted-foreground">失败</div>
                   </div>
                 </div>
+
+                {/* 显示错误信息 */}
+                {conversionResult.errors.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-red-600">
+                      错误详情
+                    </div>
+                    <div className="text-xs text-red-500 bg-red-50 rounded-lg p-3 max-h-60 overflow-y-auto font-light">
+                      <ul className="space-y-1 list-disc pl-4">
+                        {conversionResult.errors
+                          .splice(0, 5)
+                          .map((error: string, index: number) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 显示警告信息 */}
+                {conversionResult.warnings.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-yellow-600">
+                      警告
+                    </div>
+                    <div className="text-xs text-yellow-500 bg-yellow-50 rounded-lg p-3 max-h-60 overflow-y-auto">
+                      <ul className="space-y-1 list-disc pl-4">
+                        {conversionResult.warnings.map(
+                          (warning: string, index: number) => (
+                            <li key={index}>{warning}</li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <AlertDialogCancel>关闭</AlertDialogCancel>

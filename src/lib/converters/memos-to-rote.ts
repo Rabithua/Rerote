@@ -66,6 +66,39 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
   const notes: Array<RoteNote> = []
   let localAttachmentsSkipped = 0
 
+  // 确保必要的数据字段存在
+  if (!data.memos || !Array.isArray(data.memos)) {
+    return {
+      success: false,
+      errors: ['数据库中没有找到备忘录数据'],
+      warnings: [],
+      stats: {
+        total: 0,
+        converted: 0,
+        failed: 0,
+        localAttachmentsSkipped: 0,
+      },
+    }
+  }
+
+  if (!data.users || !Array.isArray(data.users)) {
+    return {
+      success: false,
+      errors: ['数据库中没有找到用户数据'],
+      warnings: [],
+      stats: {
+        total: 0,
+        converted: 0,
+        failed: 0,
+        localAttachmentsSkipped: 0,
+      },
+    }
+  }
+
+  if (!data.attachments || !Array.isArray(data.attachments)) {
+    data.attachments = []
+  }
+
   // 根据选择的用户筛选 memos
   let filteredMemos = data.memos
   if (selectedUserId !== undefined) {
@@ -98,6 +131,12 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
 
   filteredMemos.forEach((memo, index) => {
     try {
+      // 验证备忘录的基本字段
+      if (!memo.content || !memo.visibility) {
+        errors.push(`Memo ${index + 1} 缺少必要字段: 内容或可见性`)
+        return
+      }
+
       // 转换 SQLite Memo 格式到 RoteNote 格式
       const state = convertVisibility(memo.visibility)
       const userInfo = getUserInfo(memo.creator_id)
