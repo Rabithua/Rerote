@@ -21,6 +21,13 @@ export interface Converter {
   validate: (data: any) => boolean
   supportedModes: Array<DataSourceMode>
   apiDescription?: string
+  usageInstructions?: {
+    steps: Array<string>
+    dataSourceOptions?: Array<{
+      mode: DataSourceMode
+      description: string
+    }>
+  }
 }
 
 export const converters: Array<Converter> = [
@@ -42,6 +49,25 @@ export const converters: Array<Converter> = [
     },
     supportedModes: ['api', 'file'],
     apiDescription: '通过 Memos API 获取数据，需要提供实例地址和 Access Token',
+    usageInstructions: {
+      steps: [
+        '选择您要转换的笔记平台（目前支持 Memos）',
+        '选择数据的来源方式',
+        '点击开始转换按钮，等待处理完成',
+        '下载转换后的 Rote 格式数据文件',
+        '在 Rote 应用中导入该文件即可',
+      ],
+      dataSourceOptions: [
+        {
+          mode: 'api',
+          description: '直接连接您的 Memos 实例获取数据（推荐）',
+        },
+        {
+          mode: 'file',
+          description: '上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）',
+        },
+      ],
+    },
   },
 ]
 

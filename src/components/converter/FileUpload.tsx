@@ -44,7 +44,7 @@ export function FileUpload({
               <div className="text-sm font-medium text-gray-900">
                 点击选择文件或拖拽文件到此处
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs font-light mt-1">
                 支持 {acceptedFormats} 格式
               </div>
             </div>
@@ -57,13 +57,13 @@ export function FileUpload({
             />
           </div>
         ) : (
-          <div className="flex gap-2 p-4 bg-muted rounded-lg">
-            <FileText className="h-6 w-6 text-foreground" />
+          <div className="flex items-center gap-2">
+            <FileText className="size-8 text-foreground" />
             <div className="flex-1">
               <div className="text-sm font-medium text-gray-900">
                 {selectedFile.name}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs font-light">
                 {(selectedFile.size / 1024).toFixed(1)} KB
               </div>
             </div>

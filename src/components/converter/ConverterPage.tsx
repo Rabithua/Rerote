@@ -423,24 +423,56 @@ export function ConverterPage() {
           <div className="lg:col-span-4 space-y-6">
             <Card className="p-4 gap-2">
               <div className="text-lg font-semibold">使用说明</div>
-              <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
-                <li>选择您要转换的笔记平台（目前支持 Memos）</li>
-                <li>
-                  选择数据的来源方式：
-                  <ul className="list-disc pl-5 mt-1 space-y-1">
+              {(() => {
+                const converter = getConverter(selectedPlatform)
+                // 确保 converter 和 usageInstructions 存在
+                if (converter && converter.usageInstructions) {
+                  const { steps, dataSourceOptions } = converter.usageInstructions
+                  if (Array.isArray(steps)) {
+                    return (
+                      <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
+                        {steps.map((step, index) => {
+                          if (index === 1 && dataSourceOptions && Array.isArray(dataSourceOptions)) {
+                            return (
+                              <li key={index}>
+                                选择数据的来源方式：
+                                <ul className="list-disc pl-5 mt-1 space-y-1">
+                                  {dataSourceOptions.map((option) => (
+                                    <li key={option.mode}>
+                                      <strong>{option.mode === 'api' ? 'API 获取' : '文件上传'}</strong>：{option.description}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </li>
+                            )
+                          }
+                          return <li key={index}>{step}</li>
+                        })}
+                      </ol>
+                    )
+                  }
+                }
+                // 默认使用说明（兼容其他平台）
+                return (
+                  <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
+                    <li>选择您要转换的笔记平台</li>
                     <li>
-                      <strong>API 获取</strong>：直接连接您的 Memos
-                      实例获取数据（推荐）
+                      选择数据的来源方式：
+                      <ul className="list-disc pl-5 mt-1 space-y-1">
+                        <li>
+                          <strong>API 获取</strong>：直接连接实例获取数据（推荐）
+                        </li>
+                        <li>
+                          <strong>文件上传</strong>：上传数据文件
+                        </li>
+                      </ul>
                     </li>
-                    <li>
-                      <strong>文件上传</strong>：上传 Memos SQLite 数据库文件（.db, .sqlite, .sqlite3）
-                    </li>
-                  </ul>
-                </li>
-                <li>点击开始转换按钮，等待处理完成</li>
-                <li>下载转换后的 Rote 格式数据文件</li>
-                <li>在 Rote 应用中导入该文件即可</li>
-              </ol>
+                    <li>点击开始转换按钮，等待处理完成</li>
+                    <li>下载转换后的 Rote 格式数据文件</li>
+                    <li>在 Rote 应用中导入该文件即可</li>
+                  </ol>
+                )
+              })()}
             </Card>
           </div>
         </div>
