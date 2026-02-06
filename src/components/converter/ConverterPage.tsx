@@ -208,6 +208,11 @@ export function ConverterPage() {
     setApiToken('')
     setFetchProgress(null)
     setDataSourceMode('api')
+    setSqliteData(null)
+    setSelectedUserId(null)
+    setShowUserSelector(false)
+    setShowResultDialog(false)
+    setIsConverting(false)
   }, [])
 
   return (
@@ -267,7 +272,10 @@ export function ConverterPage() {
                           </Label>
                           <Tabs
                             value={dataSourceMode}
-                            onValueChange={(value) => setDataSourceMode(value as DataSourceMode)}
+                            onValueChange={(value) => {
+                              setDataSourceMode(value as DataSourceMode)
+                              setFetchProgress(null) // 切换数据源模式时重置获取进度
+                            }}
                             className="w-full"
                           >
                             <TabsList className="bg-muted/50">
@@ -277,9 +285,7 @@ export function ConverterPage() {
                                 </TabsTrigger>
                               )}
                               {converter.supportedModes.includes('file') && (
-                                <TabsTrigger value="file">
-                                  上传文件
-                                </TabsTrigger>
+                                <TabsTrigger value="file">上传文件</TabsTrigger>
                               )}
                             </TabsList>
 
@@ -299,7 +305,9 @@ export function ConverterPage() {
                                       type="url"
                                       placeholder="例如：https://memos.example.com"
                                       value={apiBaseUrl}
-                                      onChange={(e) => setApiBaseUrl(e.target.value)}
+                                      onChange={(e) =>
+                                        setApiBaseUrl(e.target.value)
+                                      }
                                     />
                                     <div className="text-xs font-light">
                                       输入您的 Memos 实例地址，不需要加末尾斜杠
@@ -317,10 +325,13 @@ export function ConverterPage() {
                                       type="password"
                                       placeholder="输入您的 Access Token"
                                       value={apiToken}
-                                      onChange={(e) => setApiToken(e.target.value)}
+                                      onChange={(e) =>
+                                        setApiToken(e.target.value)
+                                      }
                                     />
                                     <div className="text-xs font-light">
-                                      在 Memos 设置 → 我的账户 → Access Token 中创建
+                                      在 Memos 设置 → 我的账户 → Access Token
+                                      中创建
                                     </div>
                                   </div>
                                   {converter.apiDescription && (
@@ -363,7 +374,9 @@ export function ConverterPage() {
                                   type="url"
                                   placeholder="例如：https://memos.example.com"
                                   value={apiBaseUrl}
-                                  onChange={(e) => setApiBaseUrl(e.target.value)}
+                                  onChange={(e) =>
+                                    setApiBaseUrl(e.target.value)
+                                  }
                                 />
                                 <div className="text-xs font-light">
                                   输入您的 Memos 实例地址，不需要加末尾斜杠
@@ -410,16 +423,6 @@ export function ConverterPage() {
                           <div className="text-sm font-medium ">
                             {fetchProgress.message}
                           </div>
-                          {fetchProgress.total && (
-                            <ProgressBar
-                              progress={
-                                (fetchProgress.current / fetchProgress.total) *
-                                100
-                              }
-                              label="获取进度"
-                              showPercentage
-                            />
-                          )}
                         </div>
                       )}
 
@@ -607,7 +610,7 @@ export function ConverterPage() {
                     <div className="text-sm font-medium text-yellow-600">
                       警告
                     </div>
-                    <div className="text-xs text-yellow-500 bg-yellow-50 rounded-lg p-3 max-h-60 overflow-y-auto">
+                    <div className="text-xs text-yellow-500 bg-yellow-50 font-light rounded-lg p-3 max-h-60 overflow-y-auto">
                       <ul className="space-y-1 list-disc pl-4">
                         {conversionResult.warnings.map(
                           (warning: string, index: number) => (

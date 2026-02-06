@@ -30,10 +30,18 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
   const warnings: Array<string> = []
   const notes: Array<RoteNote> = []
   let localAttachmentsSkipped = 0
+  let emptyContentWithoutAttachmentsCount = 0
 
   data.memos.forEach((memo, index) => {
     try {
       const { note, skippedLocalAttachments } = convertSingleMemo(memo)
+
+      // 检查是否没有附件且内容为空
+      if (note.attachments.length === 0 && !note.content.trim()) {
+        note.content = ""
+        emptyContentWithoutAttachmentsCount++
+      }
+
       notes.push(note)
       localAttachmentsSkipped += skippedLocalAttachments
     } catch (error) {
@@ -44,6 +52,12 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
   if (localAttachmentsSkipped > 0) {
     warnings.push(
       `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。请将附件上传到云存储后重新导出。`,
+    )
+  }
+
+  if (emptyContentWithoutAttachmentsCount > 0) {
+    warnings.push(
+      `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`,
     )
   }
 
@@ -130,6 +144,8 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
     }
   }
 
+  let emptyContentWithoutAttachmentsCount = 0
+
   filteredMemos.forEach((memo, index) => {
     try {
       // 验证备忘录的基本字段
@@ -166,6 +182,12 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
         reactions: [],
       }
 
+      // 检查是否没有附件且内容为空
+      if (note.attachments.length === 0 && !note.content.trim()) {
+        note.content = ""
+        emptyContentWithoutAttachmentsCount++
+      }
+
       notes.push(note)
     } catch (error) {
       errors.push(`Memo ${index + 1} 转换失败: ${(error as Error).message}`)
@@ -175,6 +197,12 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
   if (localAttachmentsSkipped > 0) {
     warnings.push(
       `检测到 ${localAttachmentsSkipped} 个本地存储的附件已被跳过，因为 Rote 不支持本地存储。`,
+    )
+  }
+
+  if (emptyContentWithoutAttachmentsCount > 0) {
+    warnings.push(
+      `检测到 ${emptyContentWithoutAttachmentsCount} 条没有附件且内容为空的记录，已舍弃其内容。`,
     )
   }
 
