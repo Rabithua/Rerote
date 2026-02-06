@@ -1,9 +1,9 @@
 import { Check, User } from 'lucide-react'
+import type { User as UserType } from '@/lib/converters/types'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import type { User as UserType } from '@/lib/converters/types'
 
 interface UserSelectorProps {
   users: Array<UserType>
@@ -22,7 +22,9 @@ export function UserSelector({
     <Card className="p-6 bg-foreground/5">
       <div className="space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900">选择要转换的用户</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            选择要转换的用户
+          </h3>
           <p className="text-sm text-gray-500 mt-1">
             请选择您要导出其备忘录的用户
           </p>
@@ -42,7 +44,10 @@ export function UserSelector({
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <RadioGroupItem value={user.id.toString()} id={`user-${user.id}`} />
+              <RadioGroupItem
+                value={user.id.toString()}
+                id={`user-${user.id}`}
+              />
               <Label
                 htmlFor={`user-${user.id}`}
                 className="flex-1 cursor-pointer"

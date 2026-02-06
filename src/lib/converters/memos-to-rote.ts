@@ -1,15 +1,24 @@
 import { v4 as uuidv4 } from 'uuid'
-import type { ConversionResult, Memo, MemoSourceData, RoteNote, SQLiteSourceData } from './types'
+import type {
+  ConversionResult,
+  Memo,
+  MemoSourceData,
+  RoteNote,
+  SQLiteSourceData,
+} from './types'
 
-export function convertMemosToRote(data: MemoSourceData | SQLiteSourceData, selectedUserId?: number): ConversionResult {
+export function convertMemosToRote(
+  data: MemoSourceData | SQLiteSourceData,
+  selectedUserId?: number,
+): ConversionResult {
   // 检查数据类型，区分是 JSON 还是 SQLite 格式
   // SQLite 格式有 users 属性，JSON 格式没有
   if ('users' in data && 'memos' in data) {
     // SQLite 格式
-    return convertFromSQLite(data as SQLiteSourceData, selectedUserId)
+    return convertFromSQLite(data, selectedUserId)
   } else if ('memos' in data && Array.isArray(data.memos)) {
     // JSON 格式（保持原样）
-    return convertFromJSON(data as MemoSourceData)
+    return convertFromJSON(data)
   } else {
     return {
       success: false,
@@ -38,7 +47,7 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
 
       // 检查是否没有附件且内容为空
       if (note.attachments.length === 0 && !note.content.trim()) {
-        note.content = ""
+        note.content = ''
         emptyContentWithoutAttachmentsCount++
       }
 
@@ -75,7 +84,10 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
   }
 }
 
-function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): ConversionResult {
+function convertFromSQLite(
+  data: SQLiteSourceData,
+  selectedUserId?: number,
+): ConversionResult {
   const errors: Array<string> = []
   const warnings: Array<string> = []
   const notes: Array<RoteNote> = []
@@ -117,7 +129,9 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
   // 根据选择的用户筛选 memos
   let filteredMemos = data.memos
   if (selectedUserId !== undefined) {
-    filteredMemos = data.memos.filter((memo) => memo.creator_id === selectedUserId)
+    filteredMemos = data.memos.filter(
+      (memo) => memo.creator_id === selectedUserId,
+    )
   }
 
   if (filteredMemos.length === 0) {
@@ -159,8 +173,11 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
       const userInfo = getUserInfo(memo.creator_id)
 
       // 获取 memo 相关的附件
-      const memoAttachments = data.attachments.filter((att) => att.memo_id === memo.id)
-      const { attachments, skippedCount } = convertSQLiteAttachments(memoAttachments)
+      const memoAttachments = data.attachments.filter(
+        (att) => att.memo_id === memo.id,
+      )
+      const { attachments, skippedCount } =
+        convertSQLiteAttachments(memoAttachments)
       localAttachmentsSkipped += skippedCount
 
       const note: RoteNote = {
@@ -184,7 +201,7 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
 
       // 检查是否没有附件且内容为空
       if (note.attachments.length === 0 && !note.content.trim()) {
-        note.content = ""
+        note.content = ''
         emptyContentWithoutAttachmentsCount++
       }
 
@@ -220,10 +237,17 @@ function convertFromSQLite(data: SQLiteSourceData, selectedUserId?: number): Con
   }
 }
 
-function convertSQLiteAttachments(attachments: Array<any>): { attachments: Array<any>, skippedCount: number } {
+function convertSQLiteAttachments(attachments: Array<any>): {
+  attachments: Array<any>
+  skippedCount: number
+} {
   // SQLite 附件转换逻辑
-  const localAttachments = attachments.filter((att) => att.storage_type === 'LOCAL' || !att.reference)
-  const remoteAttachments = attachments.filter((att) => att.storage_type !== 'LOCAL' && att.reference)
+  const localAttachments = attachments.filter(
+    (att) => att.storage_type === 'LOCAL' || !att.reference,
+  )
+  const remoteAttachments = attachments.filter(
+    (att) => att.storage_type !== 'LOCAL' && att.reference,
+  )
 
   const converted = remoteAttachments.map((att) => {
     return {

@@ -47,18 +47,19 @@ export async function readSQLiteFile(file: File): Promise<any> {
         let users = []
         try {
           const usersResult = db.exec('SELECT * FROM user')
-          users = usersResult[0]?.values?.map((row: any[]) => ({
-            id: row[0],
-            created_ts: row[1],
-            updated_ts: row[2],
-            row_status: row[3],
-            username: row[4],
-            role: row[5],
-            email: row[6],
-            nickname: row[7],
-            avatar_url: row[9],
-            description: row[10],
-          })) || []
+          users =
+            usersResult[0]?.values?.map((row: Array<any>) => ({
+              id: row[0],
+              created_ts: row[1],
+              updated_ts: row[2],
+              row_status: row[3],
+              username: row[4],
+              role: row[5],
+              email: row[6],
+              nickname: row[7],
+              avatar_url: row[9],
+              description: row[10],
+            })) || []
         } catch (error) {
           console.warn('读取用户表失败:', error)
           users = []
@@ -68,18 +69,19 @@ export async function readSQLiteFile(file: File): Promise<any> {
         let memos = []
         try {
           const memosResult = db.exec('SELECT * FROM memo')
-          memos = memosResult[0]?.values?.map((row: any[]) => ({
-            id: row[0],
-            uid: row[1],
-            creator_id: row[2],
-            created_ts: row[3],
-            updated_ts: row[4],
-            row_status: row[5],
-            content: row[6],
-            visibility: row[7],
-            pinned: row[8] === 1,
-            payload: JSON.parse(row[9] || '{}'),
-          })) || []
+          memos =
+            memosResult[0]?.values?.map((row: Array<any>) => ({
+              id: row[0],
+              uid: row[1],
+              creator_id: row[2],
+              created_ts: row[3],
+              updated_ts: row[4],
+              row_status: row[5],
+              content: row[6],
+              visibility: row[7],
+              pinned: row[8] === 1,
+              payload: JSON.parse(row[9] || '{}'),
+            })) || []
         } catch (error) {
           console.warn('读取备忘录表失败:', error)
           memos = []
@@ -89,21 +91,22 @@ export async function readSQLiteFile(file: File): Promise<any> {
         let attachments = []
         try {
           const attachmentsResult = db.exec('SELECT * FROM attachment')
-          attachments = attachmentsResult[0]?.values?.map((row: any[]) => ({
-            id: row[0],
-            uid: row[1],
-            creator_id: row[2],
-            created_ts: row[3],
-            updated_ts: row[4],
-            filename: row[5],
-            blob: row[6],
-            type: row[7],
-            size: row[8],
-            memo_id: row[9],
-            storage_type: row[10],
-            reference: row[11],
-            payload: JSON.parse(row[12] || '{}'),
-          })) || []
+          attachments =
+            attachmentsResult[0]?.values?.map((row: Array<any>) => ({
+              id: row[0],
+              uid: row[1],
+              creator_id: row[2],
+              created_ts: row[3],
+              updated_ts: row[4],
+              filename: row[5],
+              blob: row[6],
+              type: row[7],
+              size: row[8],
+              memo_id: row[9],
+              storage_type: row[10],
+              reference: row[11],
+              payload: JSON.parse(row[12] || '{}'),
+            })) || []
         } catch (error) {
           console.warn('读取附件表失败:', error)
           attachments = []
@@ -113,7 +116,9 @@ export async function readSQLiteFile(file: File): Promise<any> {
         resolve({ users, memos, attachments })
       } catch (error) {
         console.error('解析 SQLite 数据库失败:', error)
-        reject(new Error(`无法解析 SQLite 数据库文件: ${(error as Error).message}`))
+        reject(
+          new Error(`无法解析 SQLite 数据库文件: ${(error as Error).message}`),
+        )
       }
     }
 

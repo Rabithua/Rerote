@@ -6,6 +6,7 @@ import {
   Download,
   Globe,
 } from 'lucide-react'
+import Logo from '@/components/logo'
 import { toast } from 'sonner'
 import type { DataSourceMode, FetchProgress } from '@/lib/converters'
 import {
@@ -16,7 +17,6 @@ import {
 } from '@/lib/converters'
 import { downloadJSON, readJSONFile, readSQLiteFile } from '@/lib/utils/file'
 import { FileUpload } from '@/components/converter/FileUpload'
-import { ProgressBar } from '@/components/converter/ProgressBar'
 import { UserSelector } from '@/components/converter/UserSelector'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -218,12 +218,19 @@ export function ConverterPage() {
   return (
     <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div>
-          <div className="text-3xl font-bold tracking-tight ">
-            Rote 数据迁移
-          </div>
-          <div className="mt-2 text-lg font-light">
-            将其他笔记平台的数据转换为 Rote 格式，轻松完成迁移。
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="flex gap-2">
+              <Logo className="h-8 w-fit " color="#07C160" />
+              <div className="text-3xl font-semibold tracking-tight ">
+                {' '}
+                | 数据迁移
+              </div>
+            </div>
+
+            <div className="mt-2 text-lg font-light">
+              将其他笔记平台的数据转换为 Rote 格式，轻松完成迁移。
+            </div>
           </div>
         </div>
 

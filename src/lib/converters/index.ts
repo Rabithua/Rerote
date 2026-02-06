@@ -1,6 +1,10 @@
 import { convertMemosToRote } from './memos-to-rote'
 import { fetchMemosFromApi, validateMemosApiConfig } from './memos-api'
-import type { ConversionResult, MemoSourceData, SQLiteSourceData } from './types'
+import type {
+  ConversionResult,
+  MemoSourceData,
+  SQLiteSourceData,
+} from './types'
 import type { FetchProgress, MemosApiConfig } from './memos-api'
 
 export { fetchMemosFromApi, validateMemosApiConfig }
@@ -42,7 +46,13 @@ export const converters: Array<Converter> = [
         return true
       }
       // 验证 SQLite 格式
-      if (data && 'users' in data && Array.isArray(data.users) && 'memos' in data && Array.isArray(data.memos)) {
+      if (
+        data &&
+        'users' in data &&
+        Array.isArray(data.users) &&
+        'memos' in data &&
+        Array.isArray(data.memos)
+      ) {
         return true
       }
       return false
