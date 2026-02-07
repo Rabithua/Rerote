@@ -223,38 +223,39 @@ export function ConverterPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-4 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 md:gap-4">
           <div>
-            <div className="flex gap-2">
-              <Logo className="h-8 w-fit " color="#07C160" />
-              <div className="text-3xl font-semibold tracking-tight ">
+            <div className="flex gap-2 items-center">
+              <Logo className="h-6 md:h-8 w-fit " color="#07C160" />
+              <div className="text-xl md:text-3xl font-semibold tracking-tight ">
                 {' '}
                 | {t('common.dataMigration')}
               </div>
             </div>
 
-            <div className="mt-2 text-lg font-light">
+            <div className="mt-1 md:mt-2 text-base md:text-lg font-light">
               {t('common.convertData')}
             </div>
           </div>
           <LanguageSwitcher />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
           <div className="lg:col-span-8">
             <Tabs
               value={selectedPlatform}
               onValueChange={handlePlatformChange}
               className="w-full"
             >
-              <div className="mb-6">
-                <TabsList className="bg-muted/50">
+              <div className="mb-6 overflow-x-auto">
+                <TabsList className="bg-muted/50 w-full sm:w-auto justify-start">
                   {converters.map((converter) => (
                     <TabsTrigger
                       key={converter.platform}
                       value={converter.platform}
+                      className="flex-1 min-w-fit"
                     >
                       {converter.name}
                     </TabsTrigger>
@@ -535,7 +536,7 @@ export function ConverterPage() {
                       : steps.en
                   if (Array.isArray(currentSteps)) {
                     return (
-                      <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
+                      <ol className="list-decimal pl-5 space-y-2 sm:space-y-3 text-sm font-light">
                         {currentSteps.map((step, index) => {
                           if (
                             index === 1 &&
@@ -573,7 +574,7 @@ export function ConverterPage() {
                 }
                 // 默认使用说明（兼容其他平台）
                 return (
-                  <ol className="list-decimal pl-5 space-y-3 text-sm font-light">
+                  <ol className="list-decimal pl-5 space-y-2 sm:space-y-3 text-sm font-light">
                     <li>{t('usage.step1')}</li>
                     <li>
                       {t('usage.step2')}：
