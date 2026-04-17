@@ -36,7 +36,8 @@
     "failedRecords": "Failed",
     "errorDetails": "Error Details",
     "warnings": "Warnings",
-    "conversionStats": "Conversion Statistics"
+    "conversionStats": "Conversion Statistics",
+    "articlesConverted": "Articles"
   },
   "fileUpload": {
     "selectFile": "Click to select a file or drag and drop here",

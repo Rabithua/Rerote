@@ -38,6 +38,9 @@ describe('Memos to Rote converter', () => {
     expect(result.stats.total).toBe(1)
     expect(result.stats.converted).toBe(1)
     expect(result.stats.failed).toBe(0)
+    expect(result.data?.articles).toBeDefined()
+    expect(result.data?.articles.length).toBe(0)
+    expect(result.stats.articlesConverted).toBe(0)
     expect(result.data?.notes).toBeDefined()
     expect(result.data?.notes.length).toBe(1)
 

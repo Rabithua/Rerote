@@ -32,6 +32,7 @@ export function convertMemosToRote(
         converted: 0,
         failed: 1,
         localAttachmentsSkipped: 0,
+        articlesConverted: 0,
       },
     }
   }
@@ -80,7 +81,7 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
 
   return {
     success: errors.length === 0,
-    data: { notes },
+    data: { articles: [], notes },
     errors,
     warnings,
     stats: {
@@ -88,6 +89,7 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
       converted: notes.length,
       failed: errors.length,
       localAttachmentsSkipped,
+      articlesConverted: 0,
     },
   }
 }
@@ -113,6 +115,7 @@ function convertFromSQLite(
         converted: 0,
         failed: 0,
         localAttachmentsSkipped: 0,
+        articlesConverted: 0,
       },
     }
   }
@@ -127,6 +130,7 @@ function convertFromSQLite(
         converted: 0,
         failed: 0,
         localAttachmentsSkipped: 0,
+        articlesConverted: 0,
       },
     }
   }
@@ -153,6 +157,7 @@ function convertFromSQLite(
         converted: 0,
         failed: 0,
         localAttachmentsSkipped: 0,
+        articlesConverted: 0,
       },
     }
   }
@@ -238,7 +243,7 @@ function convertFromSQLite(
 
   return {
     success: errors.length === 0,
-    data: { notes },
+    data: { articles: [], notes },
     errors,
     warnings,
     stats: {
@@ -246,6 +251,7 @@ function convertFromSQLite(
       converted: notes.length,
       failed: errors.length,
       localAttachmentsSkipped,
+      articlesConverted: 0,
     },
   }
 }

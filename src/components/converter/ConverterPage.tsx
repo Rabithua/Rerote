@@ -649,6 +649,16 @@ export function ConverterPage() {
                       {t('converter.failedRecords')}
                     </div>
                   </div>
+                  {conversionResult.stats.articlesConverted > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <div className="text-2xl font-bold tabular-nums">
+                        {conversionResult.stats.articlesConverted}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t('converter.articlesConverted')}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 显示错误信息 */}

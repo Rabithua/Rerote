@@ -74,7 +74,16 @@ export interface Memo {
   snippet: string
 }
 
+export interface RoteArticle {
+  id: string
+  content: string
+  authorId: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface RoteOutputData {
+  articles: Array<RoteArticle>
   notes: Array<RoteNote>
 }
 
@@ -130,5 +139,6 @@ export interface ConversionResult {
     converted: number
     failed: number
     localAttachmentsSkipped: number
+    articlesConverted: number
   }
 }

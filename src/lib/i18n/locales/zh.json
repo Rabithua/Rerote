@@ -36,7 +36,8 @@
     "failedRecords": "失败",
     "errorDetails": "错误详情",
     "warnings": "警告",
-    "conversionStats": "转换统计"
+    "conversionStats": "转换统计",
+    "articlesConverted": "文章"
   },
   "fileUpload": {
     "selectFile": "点击选择文件或拖拽文件到此处",
