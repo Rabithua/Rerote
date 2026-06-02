@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { FileText, Upload, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { useTranslation } from 'react-i18next'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void

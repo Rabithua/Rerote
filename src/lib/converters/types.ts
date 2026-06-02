@@ -3,6 +3,10 @@ export interface MemoSourceData {
   nextPageToken: string
 }
 
+export interface ConversionOptions {
+  cleanMarkdown?: boolean
+}
+
 export interface SQLiteSourceData {
   users: Array<User>
   memos: Array<SQLiteMemo>
@@ -60,16 +64,17 @@ export interface Memo {
   displayTime: string
   content: string
   visibility: string
-  tags: Array<string>
+  tags?: Array<string>
   pinned: boolean
   attachments: Array<any>
   relations: Array<any>
   reactions: Array<any>
-  property: {
+  property?: {
     hasLink: boolean
     hasTaskList: boolean
     hasCode: boolean
     hasIncompleteTasks: boolean
+    tags?: Array<string>
   }
   snippet: string
 }

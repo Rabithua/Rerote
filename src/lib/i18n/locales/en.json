@@ -31,6 +31,8 @@
     "convertComplete": "Conversion Complete",
     "convertSuccessMessage": "Your data has been successfully converted to Rote format. Please download the file and import it into the app.",
     "convertCompleteMessage": "There were some issues during conversion. Please check the detailed statistics below.",
+    "cleanMarkdown": "Clean Markdown syntax",
+    "cleanMarkdownDescription": "Export plain text content while preserving parsed tags and attachments.",
     "totalRecords": "Total Records",
     "successRecords": "Success",
     "failedRecords": "Failed",
@@ -60,6 +62,11 @@
     "fileOption": "File Upload: Upload data file",
     "memosApiOption": "API Fetch: Connect directly to your Memos instance to fetch data (recommended)",
     "memosFileOption": "File Upload: Upload Memos SQLite database file (.db, .sqlite, .sqlite3)"
+  },
+  "contact": {
+    "title": "Need help?",
+    "description": "Scan the WeChat QR code if you run into migration or import issues.",
+    "qrAlt": "WeChat QR code"
   },
   "errors": {
     "noConverter": "No corresponding converter found",

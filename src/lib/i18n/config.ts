@@ -33,7 +33,7 @@ i18n
   })
 
 export const getCurrentLanguage = (): Language => {
-  return (i18n.language as Language) || 'en'
+  return i18n.language === 'zh' ? 'zh' : 'en'
 }
 
 export default i18n

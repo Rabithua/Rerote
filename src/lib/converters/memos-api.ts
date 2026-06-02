@@ -11,6 +11,8 @@ export interface FetchProgress {
   message: string
 }
 
+type MemoState = 'NORMAL' | 'ARCHIVED'
+
 /**
  * 从 Memos 实例 API 获取所有 memos 数据
  * @param config API 配置（实例地址和 token）
@@ -26,10 +28,7 @@ export async function fetchMemosFromApi(
   // 规范化 baseUrl，移除末尾斜杠
   const normalizedUrl = baseUrl.replace(/\/+$/, '')
 
-  const allMemos: Array<Memo> = []
-  let pageToken = ''
-  let pageCount = 0
-  const pageSize = 50
+  const memoMap = new Map<string, Memo>()
 
   onProgress?.({
     current: 0,
@@ -37,20 +36,61 @@ export async function fetchMemosFromApi(
     message: '正在连接 Memos 实例...',
   })
 
-  // 循环获取所有分页数据
+  for (const state of ['NORMAL', 'ARCHIVED'] satisfies Array<MemoState>) {
+    await fetchMemosByState({
+      normalizedUrl,
+      token,
+      state,
+      memoMap,
+      onProgress,
+    })
+  }
+
+  const allMemos = [...memoMap.values()]
+
+  onProgress?.({
+    current: allMemos.length,
+    total: allMemos.length,
+    message: `获取完成，共 ${allMemos.length} 条记录`,
+  })
+
+  return {
+    memos: allMemos,
+    nextPageToken: '',
+  }
+}
+
+async function fetchMemosByState({
+  normalizedUrl,
+  token,
+  state,
+  memoMap,
+  onProgress,
+}: {
+  normalizedUrl: string
+  token: string
+  state: MemoState
+  memoMap: Map<string, Memo>
+  onProgress?: (progress: FetchProgress) => void
+}) {
+  let pageToken = ''
+  let pageCount = 0
+  const pageSize = 50
+
   do {
     pageCount++
 
     const url = new URL(`${normalizedUrl}/api/v1/memos`)
     url.searchParams.set('pageSize', String(pageSize))
+    url.searchParams.set('state', state)
     if (pageToken) {
       url.searchParams.set('pageToken', pageToken)
     }
 
     onProgress?.({
-      current: allMemos.length,
+      current: memoMap.size,
       total: null,
-      message: `正在获取第 ${pageCount} 页数据...`,
+      message: `正在获取 ${state === 'ARCHIVED' ? '归档' : '正常'}记录第 ${pageCount} 页...`,
     })
 
     const response = await fetch(url.toString(), {
@@ -80,26 +120,17 @@ export async function fetchMemosFromApi(
       throw new Error('API 返回的数据格式无效')
     }
 
-    allMemos.push(...data.memos)
+    data.memos.forEach((memo) => {
+      memoMap.set(memo.name, memo)
+    })
     pageToken = data.nextPageToken || ''
 
     onProgress?.({
-      current: allMemos.length,
+      current: memoMap.size,
       total: null,
-      message: `已获取 ${allMemos.length} 条记录...`,
+      message: `已获取 ${memoMap.size} 条记录...`,
     })
   } while (pageToken)
-
-  onProgress?.({
-    current: allMemos.length,
-    total: allMemos.length,
-    message: `获取完成，共 ${allMemos.length} 条记录`,
-  })
-
-  return {
-    memos: allMemos,
-    nextPageToken: '',
-  }
 }
 
 /**
