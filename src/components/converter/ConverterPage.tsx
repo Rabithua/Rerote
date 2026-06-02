@@ -573,8 +573,8 @@ export function ConverterPage() {
             </Tabs>
           </div>
 
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="p-4 gap-2">
+          <aside className="lg:col-span-4 space-y-8 lg:border-l lg:pl-8">
+            <section className="space-y-3">
               <div className="text-lg font-semibold">{t('usage.title')}</div>
               {(() => {
                 const converter = getConverter(selectedPlatform)
@@ -648,24 +648,24 @@ export function ConverterPage() {
                   </ol>
                 )
               })()}
-            </Card>
+            </section>
 
-            <Card className="p-4 gap-3">
+            <section className="space-y-3 border-t pt-6">
               <div className="text-lg font-semibold">{t('contact.title')}</div>
               <div className="text-sm font-light text-muted-foreground">
                 {t('contact.description')}
               </div>
-              <div className="flex justify-center">
+              <div>
                 <img
                   src="/wechat.svg"
                   alt={t('contact.qrAlt')}
-                  className="aspect-square w-40 max-w-full rounded-md border bg-white p-2"
+                  className="aspect-square w-36 max-w-full rounded-md bg-white p-2"
                 />
               </div>
-            </Card>
+            </section>
 
             <Footer />
-          </div>
+          </aside>
         </div>
 
         <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
