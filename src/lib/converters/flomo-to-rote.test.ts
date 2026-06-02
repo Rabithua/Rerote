@@ -68,6 +68,27 @@ describe('flomo to Rote converter', () => {
     expect(isFlomoSourceData({ html: '<html></html>' })).toBe(false)
   })
 
+  it('should preserve direct br line breaks without adding blank lines', () => {
+    const result = convertFlomoToRote({
+      html: `
+        <html>
+          <head><title>flomo · 浮墨笔记</title></head>
+          <body>
+            <div class="memos">
+              <div class="memo">
+                <div class="time">2024-01-02 12:34:56</div>
+                <div class="content">foo<br>bar</div>
+                <div class="files"></div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+    })
+
+    expect(result.data?.notes[0].content).toBe('foo\nbar')
+  })
+
   it('should fail when no memo nodes are present', () => {
     const result = convertFlomoToRote({
       html: '<html><title>flomo · 浮墨笔记</title></html>',

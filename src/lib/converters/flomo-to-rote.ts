@@ -167,7 +167,6 @@ function collectBlockText(node: Node, lines: Array<string>) {
   const tagName = node.tagName.toLowerCase()
 
   if (tagName === 'br') {
-    lines.push('')
     return
   }
 
