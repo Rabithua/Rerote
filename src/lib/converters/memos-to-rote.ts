@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
+import removeMarkdown from 'remove-markdown'
 import type {
+  ConversionOptions,
   ConversionResult,
   Memo,
   MemoSourceData,
@@ -12,15 +14,16 @@ import { getCurrentLanguage } from '@/lib/i18n/config'
 export function convertMemosToRote(
   data: MemoSourceData | SQLiteSourceData,
   selectedUserId?: number,
+  options: ConversionOptions = {},
 ): ConversionResult {
   // 检查数据类型，区分是 JSON 还是 SQLite 格式
   // SQLite 格式有 users 属性，JSON 格式没有
   if ('users' in data && 'memos' in data) {
     // SQLite 格式
-    return convertFromSQLite(data, selectedUserId)
+    return convertFromSQLite(data, selectedUserId, options)
   } else if ('memos' in data && Array.isArray(data.memos)) {
     // JSON 格式（保持原样）
-    return convertFromJSON(data)
+    return convertFromJSON(data, options)
   } else {
     const lang = getCurrentLanguage()
     return {
@@ -38,7 +41,10 @@ export function convertMemosToRote(
   }
 }
 
-function convertFromJSON(data: MemoSourceData): ConversionResult {
+function convertFromJSON(
+  data: MemoSourceData,
+  options: ConversionOptions,
+): ConversionResult {
   const errors: Array<string> = []
   const warnings: Array<string> = []
   const notes: Array<RoteNote> = []
@@ -47,7 +53,7 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
 
   data.memos.forEach((memo, index) => {
     try {
-      const { note, skippedLocalAttachments } = convertSingleMemo(memo)
+      const { note, skippedLocalAttachments } = convertSingleMemo(memo, options)
 
       // 检查是否没有附件且内容为空
       if (note.attachments.length === 0 && !note.content.trim()) {
@@ -95,8 +101,9 @@ function convertFromJSON(data: MemoSourceData): ConversionResult {
 }
 
 function convertFromSQLite(
-  data: SQLiteSourceData,
+  data: Partial<SQLiteSourceData>,
   selectedUserId?: number,
+  options: ConversionOptions = {},
 ): ConversionResult {
   const errors: Array<string> = []
   const warnings: Array<string> = []
@@ -135,9 +142,9 @@ function convertFromSQLite(
     }
   }
 
-  if (!data.attachments || !Array.isArray(data.attachments)) {
-    data.attachments = []
-  }
+  const sourceAttachments = Array.isArray(data.attachments)
+    ? data.attachments
+    : []
 
   // 根据选择的用户筛选 memos
   let filteredMemos = data.memos
@@ -187,10 +194,10 @@ function convertFromSQLite(
       const userInfo = getUserInfo(memo.creator_id)
 
       // 获取 memo 相关的附件
-      const memoAttachments = data.attachments.filter(
+      const memoAttachments = sourceAttachments.filter(
         (att) => att.memo_id === memo.id,
       )
-      const { attachments, skippedCount } =
+      const { attachments: convertedAttachments, skippedCount } =
         convertSQLiteAttachments(memoAttachments)
       localAttachmentsSkipped += skippedCount
 
@@ -198,8 +205,8 @@ function convertFromSQLite(
         id: uuidv4(),
         title: '',
         type: 'Rote',
-        tags: memo.payload?.tags || [],
-        content: memo.content,
+        tags: normalizeTags(memo.payload?.tags, memo.content),
+        content: normalizeContent(memo.content, options),
         state,
         archived: memo.row_status !== 'NORMAL',
         authorid: memo.creator_id.toString(),
@@ -209,7 +216,7 @@ function convertFromSQLite(
         createdAt: new Date(memo.created_ts * 1000).toISOString(),
         updatedAt: new Date(memo.updated_ts * 1000).toISOString(),
         author: userInfo,
-        attachments,
+        attachments: convertedAttachments,
         reactions: [],
       }
 
@@ -300,7 +307,10 @@ interface ConvertMemoResult {
   skippedLocalAttachments: number
 }
 
-function convertSingleMemo(memo: Memo): ConvertMemoResult {
+function convertSingleMemo(
+  memo: Memo,
+  options: ConversionOptions,
+): ConvertMemoResult {
   // 转换可见性
   const state = convertVisibility(memo.visibility)
   const { attachments, skippedCount } = convertAttachments(memo.attachments)
@@ -309,8 +319,11 @@ function convertSingleMemo(memo: Memo): ConvertMemoResult {
     id: uuidv4(),
     title: '',
     type: 'Rote',
-    tags: memo.tags,
-    content: memo.content,
+    tags: normalizeTags(
+      [...memo.tags, ...(memo.property.tags ?? [])],
+      memo.content,
+    ),
+    content: normalizeContent(memo.content, options),
     state,
     archived: memo.state !== 'NORMAL',
     authorid: extractUserId(memo.creator),
@@ -338,10 +351,69 @@ function convertVisibility(visibility: string): string {
     case 'PRIVATE':
       return 'private'
     case 'PROTECTED':
-      return 'protected'
+      return 'private'
     default:
       return 'private'
   }
+}
+
+function normalizeContent(content: string, options: ConversionOptions): string {
+  if (!options.cleanMarkdown) return content
+
+  return removeMarkdown(content, {
+    stripListLeaders: true,
+    listUnicodeChar: '',
+    gfm: true,
+    useImgAltText: true,
+  }).trim()
+}
+
+function normalizeTags(tags: unknown, content: string): Array<string> {
+  const explicitTags = Array.isArray(tags)
+    ? tags.flatMap((tag) => normalizeTagValue(tag))
+    : []
+  const contentTags = extractTagsFromContent(content)
+  const uniqueTags = new Set([...explicitTags, ...contentTags])
+
+  return [...uniqueTags].slice(0, 20)
+}
+
+function normalizeTagValue(tag: unknown): Array<string> {
+  if (typeof tag === 'string') {
+    const normalized = normalizeTagName(tag)
+    return normalized ? [normalized] : []
+  }
+
+  if (tag && typeof tag === 'object') {
+    const tagRecord = tag as Record<string, unknown>
+    const value = tagRecord.name ?? tagRecord.tag ?? tagRecord.value
+    return normalizeTagValue(value)
+  }
+
+  return []
+}
+
+function normalizeTagName(tag: string): string {
+  return tag
+    .trim()
+    .replace(/^#+/, '')
+    .replace(/[，,.;:!?。！？、]+$/u, '')
+    .trim()
+    .slice(0, 50)
+}
+
+function extractTagsFromContent(content: string): Array<string> {
+  const tags = new Set<string>()
+  const tagPattern = /(?:^|\s)#([^\s#]+)/gu
+
+  for (const match of content.matchAll(tagPattern)) {
+    const normalized = normalizeTagName(match[1])
+    if (normalized) {
+      tags.add(normalized)
+    }
+  }
+
+  return [...tags]
 }
 
 function extractUserId(creator: string): string {

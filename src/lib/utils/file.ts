@@ -32,13 +32,13 @@ export function readJSONFile(file: File): Promise<any> {
 export async function readSQLiteFile(file: File): Promise<any> {
   const { default: initSqlJs } = await import('sql.js')
   const SQL = await initSqlJs({
-    locateFile: (file) => `https://sql.js.org/dist/${file}`,
+    locateFile: (sqlFile) => `https://sql.js.org/dist/${sqlFile}`,
   })
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       try {
         const buffer = event.target?.result as ArrayBuffer
         const db = new SQL.Database(new Uint8Array(buffer))

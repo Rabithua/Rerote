@@ -3,6 +3,10 @@ export interface MemoSourceData {
   nextPageToken: string
 }
 
+export interface ConversionOptions {
+  cleanMarkdown?: boolean
+}
+
 export interface SQLiteSourceData {
   users: Array<User>
   memos: Array<SQLiteMemo>
@@ -70,6 +74,7 @@ export interface Memo {
     hasTaskList: boolean
     hasCode: boolean
     hasIncompleteTasks: boolean
+    tags?: Array<string>
   }
   snippet: string
 }

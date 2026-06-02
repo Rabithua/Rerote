@@ -1,6 +1,7 @@
 import { convertMemosToRote } from './memos-to-rote'
 import { fetchMemosFromApi, validateMemosApiConfig } from './memos-api'
 import type {
+  ConversionOptions,
   ConversionResult,
   MemoSourceData,
   SQLiteSourceData,
@@ -21,7 +22,11 @@ export interface Converter {
   platform: Platform
   name: string
   description: string | { zh: string; en: string }
-  convert: (data: any, selectedUserId?: number) => ConversionResult
+  convert: (
+    data: any,
+    selectedUserId?: number,
+    options?: ConversionOptions,
+  ) => ConversionResult
   validate: (data: any) => boolean
   supportedModes: Array<DataSourceMode>
   apiDescription?: string | { zh: string; en: string }

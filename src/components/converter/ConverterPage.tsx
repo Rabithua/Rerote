@@ -6,10 +6,11 @@ import {
   Download,
   Globe,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import type { DataSourceMode, FetchProgress } from '@/lib/converters'
 import Logo from '@/components/logo'
 import { Footer } from '@/components/Footer'
-import { toast } from 'sonner'
-import type { DataSourceMode, FetchProgress } from '@/lib/converters'
 import {
   Platform,
   converters,
@@ -30,7 +31,6 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
 } from '@/components/ui/alert-dialog'
-import { useTranslation } from 'react-i18next'
 import { getCurrentLanguage } from '@/lib/i18n/config'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
@@ -44,6 +44,7 @@ export function ConverterPage() {
   const [conversionResult, setConversionResult] = useState<any>(null)
   const [isConverting, setIsConverting] = useState(false)
   const [showResultDialog, setShowResultDialog] = useState(false)
+  const [cleanMarkdown, setCleanMarkdown] = useState(false)
 
   // SQLite 模式相关状态
   const [sqliteData, setSqliteData] = useState<any>(null)
@@ -105,7 +106,9 @@ export function ConverterPage() {
 
           if (data.users.length === 1) {
             // 只有一个用户，直接转换
-            const result = converter.convert(data, data.users[0].id)
+            const result = converter.convert(data, data.users[0].id, {
+              cleanMarkdown,
+            })
             setConversionResult(result)
             setShowResultDialog(true)
 
@@ -129,14 +132,15 @@ export function ConverterPage() {
       // 继续处理 JSON 和单个用户的 SQLite 转换
       if (
         dataSourceMode === 'api' ||
-        (dataSourceMode === 'file' &&
-          file!.name.toLowerCase().endsWith('.json'))
+        file?.name.toLowerCase().endsWith('.json')
       ) {
         if (!converter.validate(data)) {
           throw new Error(t('errors.invalidData'))
         }
 
-        const result = converter.convert(data)
+        const result = converter.convert(data, undefined, {
+          cleanMarkdown,
+        })
         setConversionResult(result)
         setShowResultDialog(true)
 
@@ -162,9 +166,17 @@ export function ConverterPage() {
       toast.error((error as Error).message)
       setIsConverting(false)
     }
-  }, [selectedPlatform, dataSourceMode, file, apiBaseUrl, apiToken])
+  }, [
+    selectedPlatform,
+    dataSourceMode,
+    file,
+    apiBaseUrl,
+    apiToken,
+    cleanMarkdown,
+    t,
+  ])
 
-  const handleUserConfirm = useCallback(async () => {
+  const handleUserConfirm = useCallback(() => {
     if (selectedUserId === null || !sqliteData) return
 
     setShowUserSelector(false)
@@ -176,7 +188,9 @@ export function ConverterPage() {
         throw new Error('未找到对应的转换器')
       }
 
-      const result = converter.convert(sqliteData, selectedUserId)
+      const result = converter.convert(sqliteData, selectedUserId, {
+        cleanMarkdown,
+      })
       setConversionResult(result)
       setShowResultDialog(true)
 
@@ -198,7 +212,7 @@ export function ConverterPage() {
     } finally {
       setIsConverting(false)
     }
-  }, [selectedUserId, sqliteData, selectedPlatform])
+  }, [selectedUserId, sqliteData, selectedPlatform, cleanMarkdown])
 
   const handleDownload = useCallback(() => {
     if (!conversionResult || !conversionResult.data) return
@@ -220,6 +234,7 @@ export function ConverterPage() {
     setShowUserSelector(false)
     setShowResultDialog(false)
     setIsConverting(false)
+    setCleanMarkdown(false)
   }, [])
 
   return (
@@ -461,6 +476,29 @@ export function ConverterPage() {
                         </div>
                       )}
 
+                      <div className="rounded-lg border bg-muted/40 p-3">
+                        <Label
+                          htmlFor="clean-markdown"
+                          className="flex cursor-pointer items-start gap-3 text-sm font-medium"
+                        >
+                          <Input
+                            id="clean-markdown"
+                            type="checkbox"
+                            checked={cleanMarkdown}
+                            onChange={(event) =>
+                              setCleanMarkdown(event.target.checked)
+                            }
+                            className="mt-0.5 size-4"
+                          />
+                          <div className="flex flex-col gap-1">
+                            <div>{t('converter.cleanMarkdown')}</div>
+                            <div className="text-xs font-light text-muted-foreground">
+                              {t('converter.cleanMarkdownDescription')}
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+
                       {/* 获取进度 */}
                       {fetchProgress && (
                         <div className="space-y-2 p-4 bg-muted rounded-lg border">
@@ -595,6 +633,20 @@ export function ConverterPage() {
                   </ol>
                 )
               })()}
+            </Card>
+
+            <Card className="p-4 gap-3">
+              <div className="text-lg font-semibold">{t('contact.title')}</div>
+              <div className="text-sm font-light text-muted-foreground">
+                {t('contact.description')}
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src="/wechat.svg"
+                  alt={t('contact.qrAlt')}
+                  className="aspect-square w-40 max-w-full rounded-md border bg-white p-2"
+                />
+              </div>
             </Card>
 
             <Footer />
