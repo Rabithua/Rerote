@@ -3,7 +3,6 @@ import { FileText, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -34,7 +33,7 @@ export function FileUpload({
   }
 
   return (
-    <Card className="p-6 bg-foreground/5">
+    <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 p-5">
       <div className="space-y-4">
         {!selectedFile ? (
           <div
@@ -80,6 +79,6 @@ export function FileUpload({
           </div>
         )}
       </div>
-    </Card>
+    </div>
   )
 }

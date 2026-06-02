@@ -26,7 +26,6 @@ import {
 import { FileUpload } from '@/components/converter/FileUpload'
 import { UserSelector } from '@/components/converter/UserSelector'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -293,8 +292,7 @@ export function ConverterPage() {
                   value={converter.platform}
                   className="mt-0"
                 >
-                  <Card className="p-4 shadow-sm">
-                    <div className="flex flex-col gap-6">
+                  <section className="flex flex-col gap-6">
                       <div>
                         <div className="text-xl font-semibold ">
                           {converter.name}{' '}
@@ -491,7 +489,7 @@ export function ConverterPage() {
                         </div>
                       )}
 
-                      <div className="rounded-lg border bg-muted/40 p-3">
+                      <div className="rounded-md bg-muted/30 px-3 py-2">
                         <Label
                           htmlFor="clean-markdown"
                           className="flex cursor-pointer items-start gap-3 text-sm font-medium"
@@ -566,14 +564,13 @@ export function ConverterPage() {
                           </Button>
                         </div>
                       )}
-                    </div>
-                  </Card>
+                  </section>
                 </TabsContent>
               ))}
             </Tabs>
           </div>
 
-          <aside className="lg:col-span-4 space-y-8 lg:border-l lg:pl-8">
+          <aside className="lg:col-span-4 space-y-8">
             <section className="space-y-3">
               <div className="text-lg font-semibold">{t('usage.title')}</div>
               {(() => {
