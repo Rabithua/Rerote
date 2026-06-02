@@ -64,12 +64,12 @@ export interface Memo {
   displayTime: string
   content: string
   visibility: string
-  tags: Array<string>
+  tags?: Array<string>
   pinned: boolean
   attachments: Array<any>
   relations: Array<any>
   reactions: Array<any>
-  property: {
+  property?: {
     hasLink: boolean
     hasTaskList: boolean
     hasCode: boolean

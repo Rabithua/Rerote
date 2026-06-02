@@ -320,7 +320,7 @@ function convertSingleMemo(
     title: '',
     type: 'Rote',
     tags: normalizeTags(
-      [...memo.tags, ...(memo.property.tags ?? [])],
+      [...(memo.tags ?? []), ...(memo.property?.tags ?? [])],
       memo.content,
     ),
     content: normalizeContent(memo.content, options),

@@ -99,6 +99,27 @@ describe('Memos to Rote converter', () => {
     ])
   })
 
+  it('should convert API memos that omit optional tag metadata', () => {
+    const result = convertMemosToRote({
+      memos: [
+        {
+          ...baseMemo,
+          content: 'Legacy export #fallback',
+          tags: undefined,
+          property: undefined,
+        },
+      ],
+      nextPageToken: '',
+    })
+
+    const note = result.data?.notes[0]
+
+    expect(result.success).toBe(true)
+    expect(result.stats.converted).toBe(1)
+    expect(note?.content).toBe('Legacy export #fallback')
+    expect(note?.tags).toEqual(['fallback'])
+  })
+
   it('should parse sqlite payload tags and map protected notes to private', () => {
     const data: SQLiteSourceData = {
       users: [
