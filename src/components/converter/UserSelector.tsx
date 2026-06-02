@@ -2,7 +2,6 @@ import { Check, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { User as UserType } from '@/lib/converters/types'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 
@@ -22,7 +21,7 @@ export function UserSelector({
   const { t } = useTranslation()
 
   return (
-    <Card className="p-6 bg-foreground/5">
+    <div className="rounded-md bg-muted/20 p-5">
       <div className="space-y-4">
         <div className="text-center">
           <div className="text-lg font-semibold text-gray-900">
@@ -82,6 +81,6 @@ export function UserSelector({
           {t('userSelector.confirmSelection')}
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }

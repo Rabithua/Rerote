@@ -17,11 +17,15 @@ import {
   fetchMemosFromApi,
   getConverter,
 } from '@/lib/converters'
-import { downloadJSON, readJSONFile, readSQLiteFile } from '@/lib/utils/file'
+import {
+  downloadJSON,
+  readFlomoFile,
+  readJSONFile,
+  readSQLiteFile,
+} from '@/lib/utils/file'
 import { FileUpload } from '@/components/converter/FileUpload'
 import { UserSelector } from '@/components/converter/UserSelector'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -88,7 +92,9 @@ export function ConverterPage() {
       } else {
         // 从文件读取数据
         const fileName = file!.name.toLowerCase()
-        if (fileName.endsWith('.json')) {
+        if (selectedPlatform === Platform.FLOMO) {
+          data = await readFlomoFile(file!)
+        } else if (fileName.endsWith('.json')) {
           // JSON 文件处理（保持原样）
           data = await readJSONFile(file!)
         } else if (
@@ -132,7 +138,8 @@ export function ConverterPage() {
       // 继续处理 JSON 和单个用户的 SQLite 转换
       if (
         dataSourceMode === 'api' ||
-        file?.name.toLowerCase().endsWith('.json')
+        file?.name.toLowerCase().endsWith('.json') ||
+        selectedPlatform === Platform.FLOMO
       ) {
         if (!converter.validate(data)) {
           throw new Error(t('errors.invalidData'))
@@ -223,12 +230,13 @@ export function ConverterPage() {
 
   const handlePlatformChange = useCallback((platform: string) => {
     setSelectedPlatform(platform as Platform)
+    const converter = getConverter(platform as Platform)
     setFile(null)
     setConversionResult(null)
     setApiBaseUrl('')
     setApiToken('')
     setFetchProgress(null)
-    setDataSourceMode('api')
+    setDataSourceMode(converter?.supportedModes.includes('api') ? 'api' : 'file')
     setSqliteData(null)
     setSelectedUserId(null)
     setShowUserSelector(false)
@@ -284,8 +292,7 @@ export function ConverterPage() {
                   value={converter.platform}
                   className="mt-0"
                 >
-                  <Card className="p-4 shadow-sm">
-                    <div className="flex flex-col gap-6">
+                  <section className="flex flex-col gap-6">
                       <div>
                         <div className="text-xl font-semibold ">
                           {converter.name}{' '}
@@ -397,7 +404,10 @@ export function ConverterPage() {
                               <TabsContent value="file" className="mt-4">
                                 <FileUpload
                                   onFileSelect={handleFileSelect}
-                                  acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                                  acceptedFormats={
+                                    converter.acceptedFormats ??
+                                    '.db,.sqlite,.sqlite3,.json'
+                                  }
                                 />
                               </TabsContent>
                             )}
@@ -470,13 +480,16 @@ export function ConverterPage() {
                           {converter.supportedModes.includes('file') && (
                             <FileUpload
                               onFileSelect={handleFileSelect}
-                              acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                              acceptedFormats={
+                                converter.acceptedFormats ??
+                                '.db,.sqlite,.sqlite3,.json'
+                              }
                             />
                           )}
                         </div>
                       )}
 
-                      <div className="rounded-lg border bg-muted/40 p-3">
+                      <div className="rounded-md bg-muted/30 px-3 py-2">
                         <Label
                           htmlFor="clean-markdown"
                           className="flex cursor-pointer items-start gap-3 text-sm font-medium"
@@ -551,15 +564,14 @@ export function ConverterPage() {
                           </Button>
                         </div>
                       )}
-                    </div>
-                  </Card>
+                  </section>
                 </TabsContent>
               ))}
             </Tabs>
           </div>
 
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="p-4 gap-2">
+          <aside className="lg:col-span-4 space-y-8">
+            <section className="space-y-3">
               <div className="text-lg font-semibold">{t('usage.title')}</div>
               {(() => {
                 const converter = getConverter(selectedPlatform)
@@ -633,24 +645,24 @@ export function ConverterPage() {
                   </ol>
                 )
               })()}
-            </Card>
+            </section>
 
-            <Card className="p-4 gap-3">
+            <section className="space-y-3 border-t pt-6">
               <div className="text-lg font-semibold">{t('contact.title')}</div>
               <div className="text-sm font-light text-muted-foreground">
                 {t('contact.description')}
               </div>
-              <div className="flex justify-center">
+              <div>
                 <img
                   src="/wechat.svg"
                   alt={t('contact.qrAlt')}
-                  className="aspect-square w-40 max-w-full rounded-md border bg-white p-2"
+                  className="aspect-square w-36 max-w-full rounded-md bg-white p-2"
                 />
               </div>
-            </Card>
+            </section>
 
             <Footer />
-          </div>
+          </aside>
         </div>
 
         <AlertDialog open={showResultDialog} onOpenChange={setShowResultDialog}>
