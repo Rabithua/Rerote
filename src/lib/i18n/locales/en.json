@@ -53,7 +53,7 @@
   },
   "usage": {
     "title": "Usage Instructions",
-    "step1": "Select the note platform you want to convert (currently supports Memos)",
+    "step1": "Select the note platform you want to convert",
     "step2": "Select the data source method",
     "step3": "Click the start conversion button and wait for processing to complete",
     "step4": "Download the converted Rote format data file",

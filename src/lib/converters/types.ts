@@ -13,6 +13,11 @@ export interface SQLiteSourceData {
   attachments: Array<SQLiteAttachment>
 }
 
+export interface FlomoSourceData {
+  html: string
+  filename?: string
+}
+
 export interface User {
   id: number
   created_ts: number

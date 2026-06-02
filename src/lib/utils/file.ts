@@ -29,6 +29,67 @@ export function readJSONFile(file: File): Promise<any> {
   })
 }
 
+export function readTextFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = (event) => {
+      resolve(event.target?.result as string)
+    }
+
+    reader.onerror = () => reject(new Error('文件读取失败'))
+    reader.readAsText(file)
+  })
+}
+
+export async function readFlomoFile(file: File): Promise<{
+  html: string
+  filename: string
+}> {
+  const fileName = file.name.toLowerCase()
+
+  if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+    return {
+      html: await readTextFile(file),
+      filename: file.name,
+    }
+  }
+
+  if (!fileName.endsWith('.zip')) {
+    throw new Error('不支持的 flomo 文件格式')
+  }
+
+  const { default: JSZip } = await import('jszip')
+  const buffer = await readArrayBufferFile(file)
+  const zip = await JSZip.loadAsync(buffer)
+  const htmlEntry = Object.values(zip.files).find((entry) => {
+    const entryName = entry.name.toLowerCase()
+    return !entry.dir && (entryName.endsWith('.html') || entryName.endsWith('.htm'))
+  })
+
+  if (!htmlEntry) {
+    throw new Error('zip 中没有找到 flomo HTML 导出文件')
+  }
+
+  return {
+    html: await htmlEntry.async('string'),
+    filename: htmlEntry.name,
+  }
+}
+
+function readArrayBufferFile(file: File): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = (event) => {
+      resolve(event.target?.result as ArrayBuffer)
+    }
+
+    reader.onerror = () => reject(new Error('文件读取失败'))
+    reader.readAsArrayBuffer(file)
+  })
+}
+
 export async function readSQLiteFile(file: File): Promise<any> {
   const { default: initSqlJs } = await import('sql.js')
   const SQL = await initSqlJs({

@@ -17,7 +17,12 @@ import {
   fetchMemosFromApi,
   getConverter,
 } from '@/lib/converters'
-import { downloadJSON, readJSONFile, readSQLiteFile } from '@/lib/utils/file'
+import {
+  downloadJSON,
+  readFlomoFile,
+  readJSONFile,
+  readSQLiteFile,
+} from '@/lib/utils/file'
 import { FileUpload } from '@/components/converter/FileUpload'
 import { UserSelector } from '@/components/converter/UserSelector'
 import { Button } from '@/components/ui/button'
@@ -88,7 +93,9 @@ export function ConverterPage() {
       } else {
         // 从文件读取数据
         const fileName = file!.name.toLowerCase()
-        if (fileName.endsWith('.json')) {
+        if (selectedPlatform === Platform.FLOMO) {
+          data = await readFlomoFile(file!)
+        } else if (fileName.endsWith('.json')) {
           // JSON 文件处理（保持原样）
           data = await readJSONFile(file!)
         } else if (
@@ -132,7 +139,8 @@ export function ConverterPage() {
       // 继续处理 JSON 和单个用户的 SQLite 转换
       if (
         dataSourceMode === 'api' ||
-        file?.name.toLowerCase().endsWith('.json')
+        file?.name.toLowerCase().endsWith('.json') ||
+        selectedPlatform === Platform.FLOMO
       ) {
         if (!converter.validate(data)) {
           throw new Error(t('errors.invalidData'))
@@ -223,12 +231,13 @@ export function ConverterPage() {
 
   const handlePlatformChange = useCallback((platform: string) => {
     setSelectedPlatform(platform as Platform)
+    const converter = getConverter(platform as Platform)
     setFile(null)
     setConversionResult(null)
     setApiBaseUrl('')
     setApiToken('')
     setFetchProgress(null)
-    setDataSourceMode('api')
+    setDataSourceMode(converter?.supportedModes.includes('api') ? 'api' : 'file')
     setSqliteData(null)
     setSelectedUserId(null)
     setShowUserSelector(false)
@@ -397,7 +406,10 @@ export function ConverterPage() {
                               <TabsContent value="file" className="mt-4">
                                 <FileUpload
                                   onFileSelect={handleFileSelect}
-                                  acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                                  acceptedFormats={
+                                    converter.acceptedFormats ??
+                                    '.db,.sqlite,.sqlite3,.json'
+                                  }
                                 />
                               </TabsContent>
                             )}
@@ -470,7 +482,10 @@ export function ConverterPage() {
                           {converter.supportedModes.includes('file') && (
                             <FileUpload
                               onFileSelect={handleFileSelect}
-                              acceptedFormats=".db,.sqlite,.sqlite3,.json"
+                              acceptedFormats={
+                                converter.acceptedFormats ??
+                                '.db,.sqlite,.sqlite3,.json'
+                              }
                             />
                           )}
                         </div>
