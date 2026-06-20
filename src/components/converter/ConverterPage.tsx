@@ -272,7 +272,7 @@ export function ConverterPage() {
               onValueChange={handlePlatformChange}
               className="w-full"
             >
-              <div className="mb-6 overflow-x-auto">
+              <div className="mb-6">
                 <TabsList className="bg-muted/50 w-full sm:w-auto justify-start">
                   {converters.map((converter) => (
                     <TabsTrigger
