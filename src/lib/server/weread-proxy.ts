@@ -37,19 +37,26 @@ export async function proxyWereadRequest(request: Request): Promise<Response> {
     )
   }
 
-  let response
+  let response: Response
   try {
-    response = await undiciFetch(WEREAD_GATEWAY, {
+    const init = {
       method: 'POST',
       headers: {
         Authorization: authorization,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-      dispatcher: proxyDispatcher,
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    })
+    } satisfies RequestInit
+
+    response = proxyDispatcher
+      ? (await undiciFetch(WEREAD_GATEWAY, {
+          ...init,
+          dispatcher: proxyDispatcher,
+        })) as Response
+      : await fetch(WEREAD_GATEWAY, init)
   } catch (error) {
+    logUpstreamError(error)
     if (isTimeoutError(error)) {
       return Response.json(
         { errmsg: '连接微信读书服务超时，请重试' },
@@ -70,6 +77,19 @@ export async function proxyWereadRequest(request: Request): Promise<Response> {
       'Content-Type':
         response.headers.get('Content-Type') ?? 'application/json',
     },
+  })
+}
+
+function logUpstreamError(error: unknown): void {
+  const cause =
+    error instanceof Error && error.cause && typeof error.cause === 'object'
+      ? (error.cause as Record<string, unknown>)
+      : undefined
+
+  console.error('WeRead upstream request failed', {
+    name: error instanceof Error ? error.name : 'UnknownError',
+    message: error instanceof Error ? error.message : String(error),
+    causeCode: typeof cause?.code === 'string' ? cause.code : undefined,
   })
 }
 

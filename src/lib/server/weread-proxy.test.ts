@@ -20,7 +20,10 @@ function request(body: string, apiKey = 'wrk-secret') {
 }
 
 describe('proxyWereadRequest', () => {
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
 
   it('forwards an allowed request and preserves the upstream response', async () => {
     const upstream = vi.fn(() =>
@@ -131,5 +134,30 @@ describe('proxyWereadRequest', () => {
       request(JSON.stringify({ api_name: '/store/search' })),
     )
     expect(response.status).toBe(403)
+  })
+
+  it('uses the platform fetch when no outbound proxy is configured', async () => {
+    vi.resetModules()
+    vi.mocked(undiciFetch).mockClear()
+    vi.stubEnv('HTTPS_PROXY', '')
+    vi.stubEnv('https_proxy', '')
+    const platformFetch = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ books: [] }), {
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    )
+    vi.stubGlobal('fetch', platformFetch)
+    const { proxyWereadRequest: proxyWithoutDispatcher } =
+      await import('./weread-proxy')
+
+    const response = await proxyWithoutDispatcher(
+      request(JSON.stringify({ api_name: '/user/notebooks' })),
+    )
+
+    expect(response.status).toBe(200)
+    expect(platformFetch).toHaveBeenCalledOnce()
+    expect(undiciFetch).not.toHaveBeenCalled()
   })
 })
