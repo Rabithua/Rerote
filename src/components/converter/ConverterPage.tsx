@@ -52,6 +52,7 @@ export function ConverterPage() {
   const [isConverting, setIsConverting] = useState(false)
   const [showResultDialog, setShowResultDialog] = useState(false)
   const [cleanMarkdown, setCleanMarkdown] = useState(false)
+  const [preserveVisibility, setPreserveVisibility] = useState(false)
 
   // SQLite 模式相关状态
   const [sqliteData, setSqliteData] = useState<any>(null)
@@ -125,6 +126,7 @@ export function ConverterPage() {
             // 只有一个用户，直接转换
             const result = converter.convert(data, data.users[0].id, {
               cleanMarkdown,
+              preserveVisibility,
             })
             setConversionResult(result)
             setShowResultDialog(true)
@@ -159,6 +161,7 @@ export function ConverterPage() {
 
         const result = converter.convert(data, undefined, {
           cleanMarkdown,
+          preserveVisibility,
         })
         setConversionResult(result)
         setShowResultDialog(true)
@@ -193,6 +196,7 @@ export function ConverterPage() {
     apiBaseUrl,
     apiToken,
     cleanMarkdown,
+    preserveVisibility,
     t,
   ])
 
@@ -210,6 +214,7 @@ export function ConverterPage() {
 
       const result = converter.convert(sqliteData, selectedUserId, {
         cleanMarkdown,
+        preserveVisibility,
       })
       setConversionResult(result)
       setShowResultDialog(true)
@@ -232,7 +237,13 @@ export function ConverterPage() {
     } finally {
       setIsConverting(false)
     }
-  }, [selectedUserId, sqliteData, selectedPlatform, cleanMarkdown])
+  }, [
+    selectedUserId,
+    sqliteData,
+    selectedPlatform,
+    cleanMarkdown,
+    preserveVisibility,
+  ])
 
   const handleDownload = useCallback(() => {
     if (!conversionResult || !conversionResult.data) return
@@ -538,6 +549,31 @@ export function ConverterPage() {
                         </div>
                       </Label>
                     </div>
+
+                    {selectedPlatform === Platform.MEMOS && (
+                      <div className="rounded-md bg-muted/30 px-3 py-2">
+                        <Label
+                          htmlFor="preserve-visibility"
+                          className="flex cursor-pointer items-start gap-3 text-sm font-medium"
+                        >
+                          <Input
+                            id="preserve-visibility"
+                            type="checkbox"
+                            checked={preserveVisibility}
+                            onChange={(event) =>
+                              setPreserveVisibility(event.target.checked)
+                            }
+                            className="mt-0.5 size-4"
+                          />
+                          <div className="flex flex-col gap-1">
+                            <div>{t('converter.preserveVisibility')}</div>
+                            <div className="text-xs font-light text-muted-foreground">
+                              {t('converter.preserveVisibilityDescription')}
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                    )}
 
                     {/* 获取进度 */}
                     {fetchProgress && (

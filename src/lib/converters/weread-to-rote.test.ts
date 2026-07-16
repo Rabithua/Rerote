@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { convertWereadToRote, isWereadSourceData } from './weread-to-rote'
 import type { WereadSourceData } from './types'
 
-vi.mock('uuid', () => ({ v4: vi.fn(() => 'test-uuid') }))
+vi.mock('uuid', () => ({
+  v4: vi.fn(() => 'test-uuid'),
+  v5: vi.fn((value: string) => `source-${value}`),
+}))
 vi.mock('@/lib/i18n/config', () => ({ getCurrentLanguage: () => 'zh' }))
 
 const source: WereadSourceData = {
@@ -221,5 +224,18 @@ describe('convertWereadToRote', () => {
       '2025-01-01T00:00:00.000Z',
       '2025-01-01T00:00:00.000Z',
     ])
+  })
+
+  it('keeps source identities stable across fresh conversions', () => {
+    const first = convertWereadToRote(source)
+    const second = convertWereadToRote(source)
+
+    expect(first.data?.formatVersion).toBe(2)
+    expect(first.data?.notes.map((note) => note.source)).toEqual(
+      second.data?.notes.map((note) => note.source),
+    )
+    expect(first.data?.notes[0].source.externalId).not.toBe(
+      first.data?.notes[1].source.externalId,
+    )
   })
 })

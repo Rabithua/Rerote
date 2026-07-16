@@ -57,6 +57,7 @@ export async function fetchMemosFromApi(
   return {
     memos: allMemos,
     nextPageToken: '',
+    sourceAccount: normalizedUrl,
   }
 }
 

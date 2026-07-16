@@ -1,16 +1,28 @@
 export interface MemoSourceData {
   memos: Array<Memo>
   nextPageToken: string
+  sourceAccount?: string
 }
 
 export interface ConversionOptions {
   cleanMarkdown?: boolean
+  preserveVisibility?: boolean
 }
 
 export interface SQLiteSourceData {
   users: Array<User>
   memos: Array<SQLiteMemo>
   attachments: Array<SQLiteAttachment>
+  sourceAccount?: string
+}
+
+export type ImportProvider = 'flomo' | 'memos' | 'weread'
+
+export interface RoteImportSource {
+  provider: ImportProvider
+  accountId: string
+  externalId: string
+  sourceUpdatedAt?: string
 }
 
 export interface FlomoSourceData {
@@ -131,6 +143,7 @@ export interface RoteArticle {
 }
 
 export interface RoteOutputData {
+  formatVersion: 2
   articles: Array<RoteArticle>
   notes: Array<RoteNote>
 }
@@ -156,6 +169,7 @@ export interface RoteNote {
   }
   attachments: Array<RoteAttachment>
   reactions: Array<any>
+  source: RoteImportSource
 }
 
 export interface RoteAttachment {
@@ -175,6 +189,7 @@ export interface RoteAttachment {
   createdAt: string
   updatedAt: string
   sortIndex: number
+  source?: RoteImportSource
 }
 
 export interface ConversionResult {

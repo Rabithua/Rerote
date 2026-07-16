@@ -36,6 +36,8 @@
     "convertCompleteMessage": "转换过程中出现了一些问题，请查看下方的详细统计。",
     "cleanMarkdown": "清理 Markdown 语法",
     "cleanMarkdownDescription": "导出纯文本内容，保留解析出的标签和附件信息。",
+    "preserveVisibility": "保留 Memos 的公开状态",
+    "preserveVisibilityDescription": "默认将迁移内容设为私密。开启后，Memos 中的公开内容会在 Rote 中保持公开。",
     "totalRecords": "总记录",
     "successRecords": "成功",
     "failedRecords": "失败",

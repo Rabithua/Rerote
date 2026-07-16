@@ -36,6 +36,8 @@
     "convertCompleteMessage": "There were some issues during conversion. Please check the detailed statistics below.",
     "cleanMarkdown": "Clean Markdown syntax",
     "cleanMarkdownDescription": "Export plain text content while preserving parsed tags and attachments.",
+    "preserveVisibility": "Preserve Memos public visibility",
+    "preserveVisibilityDescription": "Migrated notes are private by default. Enable this to keep public Memos notes public in Rote.",
     "totalRecords": "Total Records",
     "successRecords": "Success",
     "failedRecords": "Failed",

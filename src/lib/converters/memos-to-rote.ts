@@ -1,4 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
+import {
+  createAttachmentSource,
+  createImportSource,
+  dedupeNotesBySource,
+} from './import-source'
 import { normalizeContent, normalizeTags } from './shared'
 import type {
   ConversionOptions,
@@ -53,7 +58,11 @@ function convertFromJSON(
 
   data.memos.forEach((memo, index) => {
     try {
-      const { note, skippedLocalAttachments } = convertSingleMemo(memo, options)
+      const { note, skippedLocalAttachments } = convertSingleMemo(
+        memo,
+        options,
+        data.sourceAccount,
+      )
 
       // 检查是否没有附件且内容为空
       if (note.attachments.length === 0 && !note.content.trim()) {
@@ -85,14 +94,16 @@ function convertFromJSON(
     )
   }
 
+  const uniqueNotes = dedupeNotesBySource(notes)
+
   return {
     success: errors.length === 0,
-    data: { articles: [], notes },
+    data: { formatVersion: 2, articles: [], notes: uniqueNotes },
     errors,
     warnings,
     stats: {
       total: data.memos.length,
-      converted: notes.length,
+      converted: uniqueNotes.length,
       failed: errors.length,
       localAttachmentsSkipped,
       articlesConverted: 0,
@@ -183,30 +194,42 @@ function convertFromSQLite(
 
   filteredMemos.forEach((memo, index) => {
     try {
+      const memoAttachments = sourceAttachments.filter(
+        (attachment) => attachment.memo_id === memo.id,
+      )
+      const memoContent = typeof memo.content === 'string' ? memo.content : ''
+
       // 验证备忘录的基本字段
-      if (!memo.content || !memo.visibility) {
-        errors.push(`Memo ${index + 1} 缺少必要字段: 内容或可见性`)
+      if ((!memoContent.trim() && memoAttachments.length === 0) || !memo.visibility) {
+        errors.push(`Memo ${index + 1} 缺少必要字段: 内容、附件或可见性`)
         return
       }
 
       // 转换 SQLite Memo 格式到 RoteNote 格式
-      const state = convertVisibility(memo.visibility)
+      const state = options.preserveVisibility
+        ? convertVisibility(memo.visibility)
+        : 'private'
       const userInfo = getUserInfo(memo.creator_id)
+      const accountKey =
+        data.sourceAccount ?? `${userInfo.username}:${memo.creator_id}`
+      const noteSource = createImportSource({
+        provider: 'memos',
+        accountKey,
+        externalKey: memo.uid || String(memo.id),
+        sourceUpdatedAt: new Date(memo.updated_ts * 1000).toISOString(),
+      })
 
       // 获取 memo 相关的附件
-      const memoAttachments = sourceAttachments.filter(
-        (att) => att.memo_id === memo.id,
-      )
       const { attachments: convertedAttachments, skippedCount } =
-        convertSQLiteAttachments(memoAttachments)
+        convertSQLiteAttachments(memoAttachments, noteSource)
       localAttachmentsSkipped += skippedCount
 
       const note: RoteNote = {
         id: uuidv4(),
         title: '',
         type: 'Rote',
-        tags: normalizeTags(memo.payload?.tags, memo.content),
-        content: normalizeContent(memo.content, options),
+        tags: normalizeTags(memo.payload?.tags, memoContent),
+        content: normalizeContent(memoContent, options),
         state,
         archived: memo.row_status !== 'NORMAL',
         authorid: memo.creator_id.toString(),
@@ -218,6 +241,7 @@ function convertFromSQLite(
         author: userInfo,
         attachments: convertedAttachments,
         reactions: [],
+        source: noteSource,
       }
 
       // 检查是否没有附件且内容为空
@@ -248,14 +272,16 @@ function convertFromSQLite(
     )
   }
 
+  const uniqueNotes = dedupeNotesBySource(notes)
+
   return {
     success: errors.length === 0,
-    data: { articles: [], notes },
+    data: { formatVersion: 2, articles: [], notes: uniqueNotes },
     errors,
     warnings,
     stats: {
       total: filteredMemos.length,
-      converted: notes.length,
+      converted: uniqueNotes.length,
       failed: errors.length,
       localAttachmentsSkipped,
       articlesConverted: 0,
@@ -263,7 +289,10 @@ function convertFromSQLite(
   }
 }
 
-function convertSQLiteAttachments(attachments: Array<any>): {
+function convertSQLiteAttachments(
+  attachments: Array<any>,
+  noteSource: RoteNote['source'],
+): {
   attachments: Array<any>
   skippedCount: number
 } {
@@ -275,7 +304,7 @@ function convertSQLiteAttachments(attachments: Array<any>): {
     (att) => att.storage_type !== 'LOCAL' && att.reference,
   )
 
-  const converted = remoteAttachments.map((att) => {
+  const converted = remoteAttachments.map((att, index) => {
     return {
       id: uuidv4(),
       url: att.reference,
@@ -293,6 +322,10 @@ function convertSQLiteAttachments(attachments: Array<any>): {
       createdAt: new Date(att.created_ts * 1000).toISOString(),
       updatedAt: new Date(att.updated_ts * 1000).toISOString(),
       sortIndex: 0,
+      source: createAttachmentSource(
+        noteSource,
+        String(att.uid ?? att.id ?? att.reference ?? index),
+      ),
     }
   })
 
@@ -310,10 +343,22 @@ interface ConvertMemoResult {
 function convertSingleMemo(
   memo: Memo,
   options: ConversionOptions,
+  sourceAccount?: string,
 ): ConvertMemoResult {
   // 转换可见性
-  const state = convertVisibility(memo.visibility)
-  const { attachments, skippedCount } = convertAttachments(memo.attachments)
+  const state = options.preserveVisibility
+    ? convertVisibility(memo.visibility)
+    : 'private'
+  const noteSource = createImportSource({
+    provider: 'memos',
+    accountKey: sourceAccount ?? memo.creator,
+    externalKey: memo.name,
+    sourceUpdatedAt: memo.updateTime,
+  })
+  const { attachments, skippedCount } = convertAttachments(
+    memo.attachments,
+    noteSource,
+  )
 
   const note: RoteNote = {
     id: uuidv4(),
@@ -339,6 +384,7 @@ function convertSingleMemo(
     },
     attachments,
     reactions: [],
+    source: noteSource,
   }
 
   return { note, skippedLocalAttachments: skippedCount }
@@ -375,7 +421,10 @@ function isLocalStorageAttachment(att: any): boolean {
   return !url.startsWith('http://') && !url.startsWith('https://')
 }
 
-function convertAttachments(attachments: Array<any>): ConvertAttachmentsResult {
+function convertAttachments(
+  attachments: Array<any>,
+  noteSource: RoteNote['source'],
+): ConvertAttachmentsResult {
   // 确保 attachments 是数组
   const safeAttachments = Array.isArray(attachments) ? attachments : []
 
@@ -385,7 +434,7 @@ function convertAttachments(attachments: Array<any>): ConvertAttachmentsResult {
     (att) => !isLocalStorageAttachment(att),
   )
 
-  const converted = remoteAttachments.map((att) => {
+  const converted = remoteAttachments.map((att, index) => {
     const url = att.externalLink || att.url || ''
     return {
       id: uuidv4(),
@@ -404,6 +453,10 @@ function convertAttachments(attachments: Array<any>): ConvertAttachmentsResult {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       sortIndex: 0,
+      source: createAttachmentSource(
+        noteSource,
+        String(att.name ?? att.id ?? url ?? index),
+      ),
     }
   })
 
