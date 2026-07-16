@@ -64,7 +64,9 @@ export async function readFlomoFile(file: File): Promise<{
   const zip = await JSZip.loadAsync(buffer)
   const htmlEntry = Object.values(zip.files).find((entry) => {
     const entryName = entry.name.toLowerCase()
-    return !entry.dir && (entryName.endsWith('.html') || entryName.endsWith('.htm'))
+    return (
+      !entry.dir && (entryName.endsWith('.html') || entryName.endsWith('.htm'))
+    )
   })
 
   if (!htmlEntry) {
@@ -75,6 +77,16 @@ export async function readFlomoFile(file: File): Promise<{
     html: await htmlEntry.async('string'),
     filename: htmlEntry.name,
   }
+}
+
+export async function readWereadFile(file: File): Promise<unknown> {
+  const fileName = file.name.toLowerCase()
+  if (fileName.endsWith('.json')) return readJSONFile(file)
+  if (fileName.endsWith('.txt')) {
+    return { text: await readTextFile(file), filename: file.name }
+  }
+
+  throw new Error('不支持的微信读书文件格式')
 }
 
 function readArrayBufferFile(file: File): Promise<ArrayBuffer> {

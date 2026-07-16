@@ -15,6 +15,7 @@ import {
   Platform,
   converters,
   fetchMemosFromApi,
+  fetchWereadFromApi,
   getConverter,
 } from '@/lib/converters'
 import {
@@ -22,6 +23,7 @@ import {
   readFlomoFile,
   readJSONFile,
   readSQLiteFile,
+  readWereadFile,
 } from '@/lib/utils/file'
 import { FileUpload } from '@/components/converter/FileUpload'
 import { UserSelector } from '@/components/converter/UserSelector'
@@ -34,6 +36,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { getCurrentLanguage } from '@/lib/i18n/config'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
@@ -74,7 +77,11 @@ export function ConverterPage() {
 
     // 检查数据源是否有效
     if (dataSourceMode === 'file' && !file) return
-    if (dataSourceMode === 'api' && (!apiBaseUrl || !apiToken)) return
+    if (
+      dataSourceMode === 'api' &&
+      (!apiToken || (selectedPlatform === Platform.MEMOS && !apiBaseUrl))
+    )
+      return
 
     setIsConverting(true)
     setConversionResult(null)
@@ -84,16 +91,20 @@ export function ConverterPage() {
       let data: any
 
       if (dataSourceMode === 'api') {
-        // 通过 API 获取数据
-        data = await fetchMemosFromApi(
-          { baseUrl: apiBaseUrl, token: apiToken },
-          setFetchProgress,
-        )
+        data =
+          selectedPlatform === Platform.WEREAD
+            ? await fetchWereadFromApi(apiToken, setFetchProgress)
+            : await fetchMemosFromApi(
+                { baseUrl: apiBaseUrl, token: apiToken },
+                setFetchProgress,
+              )
       } else {
         // 从文件读取数据
         const fileName = file!.name.toLowerCase()
         if (selectedPlatform === Platform.FLOMO) {
           data = await readFlomoFile(file!)
+        } else if (selectedPlatform === Platform.WEREAD) {
+          data = await readWereadFile(file!)
         } else if (fileName.endsWith('.json')) {
           // JSON 文件处理（保持原样）
           data = await readJSONFile(file!)
@@ -139,6 +150,7 @@ export function ConverterPage() {
       if (
         dataSourceMode === 'api' ||
         file?.name.toLowerCase().endsWith('.json') ||
+        selectedPlatform === Platform.WEREAD ||
         selectedPlatform === Platform.FLOMO
       ) {
         if (!converter.validate(data)) {
@@ -171,6 +183,7 @@ export function ConverterPage() {
       setIsConverting(false) // 成功完成后重置加载状态
     } catch (error) {
       toast.error((error as Error).message)
+      setFetchProgress(null)
       setIsConverting(false)
     }
   }, [
@@ -236,7 +249,9 @@ export function ConverterPage() {
     setApiBaseUrl('')
     setApiToken('')
     setFetchProgress(null)
-    setDataSourceMode(converter?.supportedModes.includes('api') ? 'api' : 'file')
+    setDataSourceMode(
+      converter?.supportedModes.includes('api') ? 'api' : 'file',
+    )
     setSqliteData(null)
     setSelectedUserId(null)
     setShowUserSelector(false)
@@ -293,51 +308,52 @@ export function ConverterPage() {
                   className="mt-0"
                 >
                   <section className="flex flex-col gap-6">
-                      <div>
-                        <div className="text-xl font-semibold ">
-                          {converter.name}{' '}
-                          {t('converter.memosExport').replace('Memos ', '')}
-                        </div>
-                        <div className="font-light mt-1">
-                          {typeof converter.description === 'string'
-                            ? converter.description
-                            : getCurrentLanguage() === 'zh'
-                              ? converter.description.zh
-                              : converter.description.en}
-                        </div>
+                    <div>
+                      <div className="text-xl font-semibold ">
+                        {converter.name}{' '}
+                        {t('converter.memosExport').replace('Memos ', '')}
                       </div>
+                      <div className="font-light mt-1">
+                        {typeof converter.description === 'string'
+                          ? converter.description
+                          : getCurrentLanguage() === 'zh'
+                            ? converter.description.zh
+                            : converter.description.en}
+                      </div>
+                    </div>
 
-                      {/* 数据源模式选择 */}
-                      {converter.supportedModes.length > 1 && (
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium ">
-                            {t('converter.selectDataSource')}
-                          </Label>
-                          <Tabs
-                            value={dataSourceMode}
-                            onValueChange={(value) => {
-                              setDataSourceMode(value as DataSourceMode)
-                              setFetchProgress(null) // 切换数据源模式时重置获取进度
-                            }}
-                            className="w-full"
-                          >
-                            <TabsList className="bg-muted/50">
-                              {converter.supportedModes.includes('api') && (
-                                <TabsTrigger value="api">
-                                  {t('converter.apiMode')}
-                                </TabsTrigger>
-                              )}
-                              {converter.supportedModes.includes('file') && (
-                                <TabsTrigger value="file">
-                                  {t('converter.fileMode')}
-                                </TabsTrigger>
-                              )}
-                            </TabsList>
-
-                            {/* API 模式配置 */}
+                    {/* 数据源模式选择 */}
+                    {converter.supportedModes.length > 1 && (
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium ">
+                          {t('converter.selectDataSource')}
+                        </Label>
+                        <Tabs
+                          value={dataSourceMode}
+                          onValueChange={(value) => {
+                            setDataSourceMode(value as DataSourceMode)
+                            setFetchProgress(null) // 切换数据源模式时重置获取进度
+                          }}
+                          className="w-full"
+                        >
+                          <TabsList className="bg-muted/50">
                             {converter.supportedModes.includes('api') && (
-                              <TabsContent value="api" className="mt-4">
-                                <div className="space-y-4">
+                              <TabsTrigger value="api">
+                                {t('converter.apiMode')}
+                              </TabsTrigger>
+                            )}
+                            {converter.supportedModes.includes('file') && (
+                              <TabsTrigger value="file">
+                                {t('converter.fileMode')}
+                              </TabsTrigger>
+                            )}
+                          </TabsList>
+
+                          {/* API 模式配置 */}
+                          {converter.supportedModes.includes('api') && (
+                            <TabsContent value="api" className="mt-4">
+                              <div className="space-y-4">
+                                {selectedPlatform === Platform.MEMOS && (
                                   <div className="space-y-2">
                                     <Label
                                       htmlFor="api-url"
@@ -360,210 +376,223 @@ export function ConverterPage() {
                                       {t('converter.memosUrlHint')}
                                     </div>
                                   </div>
-                                  <div className="space-y-2">
-                                    <Label
-                                      htmlFor="api-token"
-                                      className="text-sm font-medium "
-                                    >
-                                      {t('converter.accessToken')}
-                                    </Label>
-                                    <Input
-                                      id="api-token"
-                                      type="password"
-                                      placeholder={t(
-                                        'converter.accessTokenPlaceholder',
-                                      )}
-                                      value={apiToken}
-                                      onChange={(e) =>
-                                        setApiToken(e.target.value)
-                                      }
-                                    />
-                                    <div className="text-xs font-light">
-                                      {t('converter.accessTokenHint')}
-                                    </div>
-                                  </div>
-                                  {converter.apiDescription && (
-                                    <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
-                                      <Globe className="h-4 w-4 mt-0.5 shrink-0" />
-                                      <div>
-                                        {typeof converter.apiDescription ===
-                                        'string'
-                                          ? converter.apiDescription
-                                          : getCurrentLanguage() === 'zh'
-                                            ? converter.apiDescription.zh
-                                            : converter.apiDescription.en}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </TabsContent>
-                            )}
-
-                            {/* 文件上传模式 */}
-                            {converter.supportedModes.includes('file') && (
-                              <TabsContent value="file" className="mt-4">
-                                <FileUpload
-                                  onFileSelect={handleFileSelect}
-                                  acceptedFormats={
-                                    converter.acceptedFormats ??
-                                    '.db,.sqlite,.sqlite3,.json'
-                                  }
-                                />
-                              </TabsContent>
-                            )}
-                          </Tabs>
-                        </div>
-                      )}
-
-                      {/* 单一数据源模式显示 */}
-                      {converter.supportedModes.length === 1 && (
-                        <div className="space-y-4">
-                          {converter.supportedModes.includes('api') && (
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label
-                                  htmlFor="api-url"
-                                  className="text-sm font-medium "
-                                >
-                                  {t('converter.memosUrl')}
-                                </Label>
-                                <Input
-                                  id="api-url"
-                                  type="url"
-                                  placeholder={t(
-                                    'converter.memosUrlPlaceholder',
-                                  )}
-                                  value={apiBaseUrl}
-                                  onChange={(e) =>
-                                    setApiBaseUrl(e.target.value)
-                                  }
-                                />
-                                <div className="text-xs font-light">
-                                  {t('converter.memosUrlHint')}
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label
-                                  htmlFor="api-token"
-                                  className="text-sm font-medium "
-                                >
-                                  {t('converter.accessToken')}
-                                </Label>
-                                <Input
-                                  id="api-token"
-                                  type="password"
-                                  placeholder={t(
-                                    'converter.accessTokenPlaceholder',
-                                  )}
-                                  value={apiToken}
-                                  onChange={(e) => setApiToken(e.target.value)}
-                                />
-                                <div className="text-xs font-light">
-                                  {t('converter.accessTokenHint')}
-                                </div>
-                              </div>
-                              {converter.apiDescription && (
-                                <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
-                                  <Globe className="h-4 w-4 mt-0.5 shrink-0" />
-                                  <div>
-                                    {typeof converter.apiDescription ===
-                                    'string'
-                                      ? converter.apiDescription
-                                      : getCurrentLanguage() === 'zh'
-                                        ? converter.apiDescription.zh
-                                        : converter.apiDescription.en}
+                                )}
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="api-token"
+                                    className="text-sm font-medium "
+                                  >
+                                    {selectedPlatform === Platform.WEREAD
+                                      ? t('converter.wereadApiKey')
+                                      : t('converter.accessToken')}
+                                  </Label>
+                                  <Input
+                                    id="api-token"
+                                    type="password"
+                                    placeholder={t(
+                                      selectedPlatform === Platform.WEREAD
+                                        ? 'converter.wereadApiKeyPlaceholder'
+                                        : 'converter.accessTokenPlaceholder',
+                                    )}
+                                    value={apiToken}
+                                    onChange={(e) =>
+                                      setApiToken(e.target.value)
+                                    }
+                                  />
+                                  <div className="text-xs font-light">
+                                    {selectedPlatform === Platform.WEREAD ? (
+                                      <a
+                                        href="https://weread.qq.com/r/weread-skills"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="underline underline-offset-2"
+                                      >
+                                        {t('converter.wereadApiKeyHint')}
+                                      </a>
+                                    ) : (
+                                      t('converter.accessTokenHint')
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                            </div>
+                                {converter.apiDescription && (
+                                  <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
+                                    <Globe className="h-4 w-4 mt-0.5 shrink-0" />
+                                    <div>
+                                      {typeof converter.apiDescription ===
+                                      'string'
+                                        ? converter.apiDescription
+                                        : getCurrentLanguage() === 'zh'
+                                          ? converter.apiDescription.zh
+                                          : converter.apiDescription.en}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </TabsContent>
                           )}
+
+                          {/* 文件上传模式 */}
                           {converter.supportedModes.includes('file') && (
-                            <FileUpload
-                              onFileSelect={handleFileSelect}
-                              acceptedFormats={
-                                converter.acceptedFormats ??
-                                '.db,.sqlite,.sqlite3,.json'
-                              }
-                            />
+                            <TabsContent value="file" className="mt-4">
+                              <FileUpload
+                                onFileSelect={handleFileSelect}
+                                acceptedFormats={
+                                  converter.acceptedFormats ??
+                                  '.db,.sqlite,.sqlite3,.json'
+                                }
+                              />
+                            </TabsContent>
                           )}
-                        </div>
-                      )}
-
-                      <div className="rounded-md bg-muted/30 px-3 py-2">
-                        <Label
-                          htmlFor="clean-markdown"
-                          className="flex cursor-pointer items-start gap-3 text-sm font-medium"
-                        >
-                          <Input
-                            id="clean-markdown"
-                            type="checkbox"
-                            checked={cleanMarkdown}
-                            onChange={(event) =>
-                              setCleanMarkdown(event.target.checked)
-                            }
-                            className="mt-0.5 size-4"
-                          />
-                          <div className="flex flex-col gap-1">
-                            <div>{t('converter.cleanMarkdown')}</div>
-                            <div className="text-xs font-light text-muted-foreground">
-                              {t('converter.cleanMarkdownDescription')}
-                            </div>
-                          </div>
-                        </Label>
+                        </Tabs>
                       </div>
+                    )}
 
-                      {/* 获取进度 */}
-                      {fetchProgress && (
-                        <div className="space-y-2 p-4 bg-muted rounded-lg border">
-                          <div className="text-sm font-medium ">
-                            {fetchProgress.message}
+                    {/* 单一数据源模式显示 */}
+                    {converter.supportedModes.length === 1 && (
+                      <div className="space-y-4">
+                        {converter.supportedModes.includes('api') && (
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor="api-url"
+                                className="text-sm font-medium "
+                              >
+                                {t('converter.memosUrl')}
+                              </Label>
+                              <Input
+                                id="api-url"
+                                type="url"
+                                placeholder={t('converter.memosUrlPlaceholder')}
+                                value={apiBaseUrl}
+                                onChange={(e) => setApiBaseUrl(e.target.value)}
+                              />
+                              <div className="text-xs font-light">
+                                {t('converter.memosUrlHint')}
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor="api-token"
+                                className="text-sm font-medium "
+                              >
+                                {t('converter.accessToken')}
+                              </Label>
+                              <Input
+                                id="api-token"
+                                type="password"
+                                placeholder={t(
+                                  'converter.accessTokenPlaceholder',
+                                )}
+                                value={apiToken}
+                                onChange={(e) => setApiToken(e.target.value)}
+                              />
+                              <div className="text-xs font-light">
+                                {t('converter.accessTokenHint')}
+                              </div>
+                            </div>
+                            {converter.apiDescription && (
+                              <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-sm font-light">
+                                <Globe className="h-4 w-4 mt-0.5 shrink-0" />
+                                <div>
+                                  {typeof converter.apiDescription === 'string'
+                                    ? converter.apiDescription
+                                    : getCurrentLanguage() === 'zh'
+                                      ? converter.apiDescription.zh
+                                      : converter.apiDescription.en}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {converter.supportedModes.includes('file') && (
+                          <FileUpload
+                            onFileSelect={handleFileSelect}
+                            acceptedFormats={
+                              converter.acceptedFormats ??
+                              '.db,.sqlite,.sqlite3,.json'
+                            }
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    <div className="rounded-md bg-muted/30 px-3 py-2">
+                      <Label
+                        htmlFor="clean-markdown"
+                        className="flex cursor-pointer items-start gap-3 text-sm font-medium"
+                      >
+                        <Input
+                          id="clean-markdown"
+                          type="checkbox"
+                          checked={cleanMarkdown}
+                          onChange={(event) =>
+                            setCleanMarkdown(event.target.checked)
+                          }
+                          className="mt-0.5 size-4"
+                        />
+                        <div className="flex flex-col gap-1">
+                          <div>{t('converter.cleanMarkdown')}</div>
+                          <div className="text-xs font-light text-muted-foreground">
+                            {t('converter.cleanMarkdownDescription')}
                           </div>
                         </div>
-                      )}
+                      </Label>
+                    </div>
 
-                      {/* 用户选择界面 */}
-                      {showUserSelector && sqliteData && (
-                        <UserSelector
-                          users={sqliteData.users}
-                          selectedUserId={selectedUserId}
-                          onUserSelect={setSelectedUserId}
-                          onConfirm={handleUserConfirm}
-                        />
-                      )}
-
-                      {/* 转换按钮 */}
-                      {!showUserSelector && (
-                        <div className="pt-4">
-                          <Button
-                            size="lg"
-                            onClick={handleConvert}
-                            disabled={
-                              (dataSourceMode === 'file' && !file) ||
-                              (dataSourceMode === 'api' &&
-                                (!apiBaseUrl || !apiToken)) ||
-                              isConverting
-                            }
-                            className="w-full sm:w-auto"
-                          >
-                            {isConverting ? (
-                              <>
-                                <div className="animate-spin mr-2 h-4 w-4 border-4 border-current border-t-transparent rounded-full" />
-                                {dataSourceMode === 'api'
-                                  ? t('converter.fetchingAndConverting')
-                                  : t('converter.converting')}
-                              </>
-                            ) : (
-                              <>
-                                {dataSourceMode === 'api'
-                                  ? t('converter.startConvert')
-                                  : t('converter.startConvertFile')}
-
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                              </>
-                            )}
-                          </Button>
+                    {/* 获取进度 */}
+                    {fetchProgress && (
+                      <div className="space-y-2 p-4 bg-muted rounded-lg border">
+                        <div className="text-sm font-medium ">
+                          {fetchProgress.message}
                         </div>
-                      )}
+                      </div>
+                    )}
+
+                    {/* 用户选择界面 */}
+                    {showUserSelector && sqliteData && (
+                      <UserSelector
+                        users={sqliteData.users}
+                        selectedUserId={selectedUserId}
+                        onUserSelect={setSelectedUserId}
+                        onConfirm={handleUserConfirm}
+                      />
+                    )}
+
+                    {/* 转换按钮 */}
+                    {!showUserSelector && (
+                      <div className="pt-4">
+                        <Button
+                          size="lg"
+                          onClick={handleConvert}
+                          disabled={
+                            (dataSourceMode === 'file' && !file) ||
+                            (dataSourceMode === 'api' &&
+                              (!apiToken ||
+                                (selectedPlatform === Platform.MEMOS &&
+                                  !apiBaseUrl))) ||
+                            isConverting
+                          }
+                          className="w-full sm:w-auto"
+                        >
+                          {isConverting ? (
+                            <>
+                              <div className="animate-spin mr-2 h-4 w-4 border-4 border-current border-t-transparent rounded-full" />
+                              {dataSourceMode === 'api'
+                                ? t('converter.fetchingAndConverting')
+                                : t('converter.converting')}
+                            </>
+                          ) : (
+                            <>
+                              {dataSourceMode === 'api'
+                                ? t('converter.startConvert')
+                                : t('converter.startConvertFile')}
+
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </section>
                 </TabsContent>
               ))}
@@ -675,11 +704,11 @@ export function ConverterPage() {
                   ) : (
                     <AlertTriangle className="size-5" />
                   )}
-                  <div className="text-lg font-semibold">
+                  <AlertDialogTitle className="text-lg font-semibold">
                     {conversionResult.success
                       ? t('converter.convertSuccess')
                       : t('converter.convertComplete')}
-                  </div>
+                  </AlertDialogTitle>
                 </div>
 
                 <div className="text-sm text-muted-foreground">

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ConverterRouteImport } from './routes/converter'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiWereadRouteImport } from './routes/api.weread'
 
 const ConverterRoute = ConverterRouteImport.update({
   id: '/converter',
@@ -22,31 +23,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWereadRoute = ApiWereadRouteImport.update({
+  id: '/api/weread',
+  path: '/api/weread',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/converter': typeof ConverterRoute
+  '/api/weread': typeof ApiWereadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/converter': typeof ConverterRoute
+  '/api/weread': typeof ApiWereadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/converter': typeof ConverterRoute
+  '/api/weread': typeof ApiWereadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/converter'
+  fullPaths: '/' | '/converter' | '/api/weread'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/converter'
-  id: '__root__' | '/' | '/converter'
+  to: '/' | '/converter' | '/api/weread'
+  id: '__root__' | '/' | '/converter' | '/api/weread'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConverterRoute: typeof ConverterRoute
+  ApiWereadRoute: typeof ApiWereadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/weread': {
+      id: '/api/weread'
+      path: '/api/weread'
+      fullPath: '/api/weread'
+      preLoaderRoute: typeof ApiWereadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConverterRoute: ConverterRoute,
+  ApiWereadRoute: ApiWereadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
