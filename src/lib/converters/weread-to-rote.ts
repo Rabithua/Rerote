@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
+import { createImportSource, dedupeNotesBySource } from './import-source'
 import { normalizeContent, normalizeTags } from './shared'
 import type {
   ConversionOptions,
@@ -18,6 +19,7 @@ type WereadInput = WereadApiSourceData | WereadSourceData | WereadTextSourceData
 
 interface NormalizedWereadNote {
   book: WereadBookMeta
+  chapterUid?: number | string
   chapterTitle: string
   item: WereadNoteItem
 }
@@ -67,14 +69,16 @@ export function convertWereadToRote(
     }
   })
 
+  const uniqueNotes = dedupeNotesBySource(notes)
+
   return {
     success: errors.length === 0,
-    data: { articles: [], notes },
+    data: { formatVersion: 2, articles: [], notes: uniqueNotes },
     errors,
     warnings: [],
     stats: {
       total: normalizedNotes.length,
-      converted: notes.length,
+      converted: uniqueNotes.length,
       failed: errors.length,
       localAttachmentsSkipped: 0,
       articlesConverted: 0,
@@ -126,6 +130,7 @@ function flattenJson(data: WereadSourceData): Array<NormalizedWereadNote> {
         ? [
             {
               book: data.meta,
+              chapterUid: chapter.chapterUid,
               chapterTitle: chapter.chapterTitle?.trim() ?? '',
               item,
             },
@@ -204,6 +209,17 @@ function convertNote(
     ['微信读书', source.book.title, source.book.category],
     rawContent,
   )
+  const bookKey = source.book.bookId?.trim() || source.book.title.trim()
+  const nativeItemId =
+    source.item.type === 'highlight'
+      ? source.item.bookmarkId
+      : source.item.reviewId
+  const fallbackKey = [
+    source.item.type,
+    source.chapterUid ?? source.chapterTitle,
+    source.item.createTime ?? source.item.createTimeFormatted ?? '',
+    rawContent,
+  ].join('\u0000')
 
   return {
     id: uuidv4(),
@@ -226,6 +242,12 @@ function convertNote(
     },
     attachments: [],
     reactions: [],
+    source: createImportSource({
+      provider: 'weread',
+      accountKey: 'weread',
+      externalKey: `${bookKey}:${nativeItemId ?? fallbackKey}`,
+      sourceUpdatedAt: timestamp,
+    }),
   }
 }
 

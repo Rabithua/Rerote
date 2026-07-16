@@ -1,5 +1,10 @@
 import { v4 as uuidv4 } from 'uuid'
 
+import {
+  createAttachmentSource,
+  createImportSource,
+  dedupeNotesBySource,
+} from './import-source'
 import { normalizeContent, normalizeTags } from './shared'
 import type {
   ConversionOptions,
@@ -40,6 +45,7 @@ export function convertFlomoToRote(
   const errors: Array<string> = []
   const warnings: Array<string> = []
   let localAttachmentsSkipped = 0
+  const signatureOccurrences = new Map<string, number>()
 
   memoElements.forEach((memoElement, index) => {
     try {
@@ -50,9 +56,18 @@ export function convertFlomoToRote(
       const rawContent = contentElement
         ? extractContentText(contentElement)
         : ''
+      const signature = `${rawTime.trim()}\u0000${rawContent}`
+      const occurrence = signatureOccurrences.get(signature) ?? 0
+      signatureOccurrences.set(signature, occurrence + 1)
+      const noteSource = createImportSource({
+        provider: 'flomo',
+        accountKey: author.username,
+        externalKey: `${signature}\u0000${occurrence}`,
+        sourceUpdatedAt: timestamp,
+      })
       const content = normalizeContent(rawContent, options)
       const { attachments, skippedCount } =
-        convertFlomoAttachments(filesElement)
+        convertFlomoAttachments(filesElement, noteSource)
 
       localAttachmentsSkipped += skippedCount
 
@@ -77,6 +92,7 @@ export function convertFlomoToRote(
         },
         attachments,
         reactions: [],
+        source: noteSource,
       })
     } catch (error) {
       errors.push(`flomo memo ${index + 1} 转换失败: ${(error as Error).message}`)
@@ -91,14 +107,22 @@ export function convertFlomoToRote(
     )
   }
 
+  warnings.push(
+    lang === 'zh'
+      ? 'flomo 官方导出不包含原始 MEMO ID：未修改的重复导入可以去重，但在 flomo 中编辑过的旧 MEMO 可能会被识别为新记录。'
+      : 'The flomo export does not include original memo IDs. Unchanged re-imports can be deduplicated, but a memo edited in flomo may be treated as a new note.',
+  )
+
+  const uniqueNotes = dedupeNotesBySource(notes)
+
   return {
     success: errors.length === 0,
-    data: { articles: [], notes },
+    data: { formatVersion: 2, articles: [], notes: uniqueNotes },
     errors,
     warnings,
     stats: {
       total: memoElements.length,
-      converted: notes.length,
+      converted: uniqueNotes.length,
       failed: errors.length,
       localAttachmentsSkipped,
       articlesConverted: 0,
@@ -236,7 +260,10 @@ function compactBlankLines(lines: Array<string>): Array<string> {
   return compacted
 }
 
-function convertFlomoAttachments(filesElement: Element | null): {
+function convertFlomoAttachments(
+  filesElement: Element | null,
+  noteSource: RoteNote['source'],
+): {
   attachments: Array<RoteAttachment>
   skippedCount: number
 } {
@@ -256,7 +283,7 @@ function convertFlomoAttachments(filesElement: Element | null): {
       return []
     }
 
-    return [createAttachment(url, element, index)]
+    return [createAttachment(url, element, index, noteSource)]
   })
 
   return { attachments, skippedCount }
@@ -270,6 +297,7 @@ function createAttachment(
   url: string,
   element: Element,
   sortIndex: number,
+  noteSource: RoteNote['source'],
 ): RoteAttachment {
   const now = new Date().toISOString()
 
@@ -290,6 +318,7 @@ function createAttachment(
     createdAt: now,
     updatedAt: now,
     sortIndex,
+    source: createAttachmentSource(noteSource, `${sortIndex}:${url}`),
   }
 }
 

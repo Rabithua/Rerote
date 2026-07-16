@@ -49,7 +49,12 @@ describe('flomo to Rote converter', () => {
     expect(result.stats.total).toBe(1)
     expect(result.stats.converted).toBe(1)
     expect(result.stats.localAttachmentsSkipped).toBe(1)
-    expect(result.warnings).toHaveLength(1)
+    expect(result.warnings).toHaveLength(2)
+    expect(
+      result.warnings.some((warning) =>
+        warning.toLowerCase().includes('memo id'),
+      ),
+    ).toBe(true)
     expect(note?.author.username).toBe('alice')
     expect(note?.createdAt).toBe('2024-01-02T04:34:56.000Z')
     expect(note?.content).toBe('Hello #tag #tag,\n- List item')
@@ -96,5 +101,23 @@ describe('flomo to Rote converter', () => {
 
     expect(result.success).toBe(false)
     expect(result.stats.failed).toBe(1)
+  })
+
+  it('creates stable but distinct identities for identical-time memos', () => {
+    const data = {
+      html: `
+        <html><title>flomo</title><body>
+          <header><div class="top"><div class="user"><div class="name">@alice</div></div></div></header>
+          <div class="memo"><div class="time">2024-01-01 08:00:00</div><div class="content"><p>same</p></div></div>
+          <div class="memo"><div class="time">2024-01-01 08:00:00</div><div class="content"><p>same</p></div></div>
+        </body></html>
+      `,
+    }
+    const first = convertFlomoToRote(data)
+    const second = convertFlomoToRote(data)
+    const firstSources = first.data?.notes.map((note) => note.source)
+
+    expect(firstSources).toEqual(second.data?.notes.map((note) => note.source))
+    expect(firstSources?.[0].externalId).not.toBe(firstSources?.[1].externalId)
   })
 })

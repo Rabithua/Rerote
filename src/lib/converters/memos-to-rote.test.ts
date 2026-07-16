@@ -50,6 +50,8 @@ describe('Memos to Rote converter', () => {
     expect(note?.tags).toEqual(['test', 'sample'])
     expect(note?.state).toBe('private')
     expect(note?.pin).toBe(false)
+    expect(note?.source.provider).toBe('memos')
+    expect(result.data?.formatVersion).toBe(2)
   })
 
   it('should clean markdown when requested', () => {
@@ -160,6 +162,84 @@ describe('Memos to Rote converter', () => {
 
     expect(note?.tags).toEqual(['sqlite', 'inline'])
     expect(note?.state).toBe('private')
+  })
+
+  it('uses stable source identities and defaults public notes to private', () => {
+    const publicMemo = { ...baseMemo, visibility: 'PUBLIC' }
+    const first = convertMemosToRote({
+      memos: [publicMemo],
+      nextPageToken: '',
+      sourceAccount: 'https://memos.example.com',
+    })
+    const second = convertMemosToRote({
+      memos: [publicMemo],
+      nextPageToken: '',
+      sourceAccount: 'https://memos.example.com',
+    })
+    const preserved = convertMemosToRote(
+      { memos: [publicMemo], nextPageToken: '' },
+      undefined,
+      { preserveVisibility: true },
+    )
+
+    expect(first.data?.notes[0].source).toEqual(second.data?.notes[0].source)
+    expect(first.data?.notes[0].state).toBe('private')
+    expect(preserved.data?.notes[0].state).toBe('public')
+  })
+
+  it('keeps attachment-only SQLite memos', () => {
+    const data: SQLiteSourceData = {
+      users: [
+        {
+          id: 1,
+          created_ts: 1,
+          updated_ts: 1,
+          row_status: 'NORMAL',
+          username: 'demo',
+          role: 'USER',
+          email: '',
+          nickname: '',
+          avatar_url: '',
+          description: '',
+        },
+      ],
+      memos: [
+        {
+          id: 1,
+          uid: 'attachment-only',
+          creator_id: 1,
+          created_ts: 1,
+          updated_ts: 1,
+          row_status: 'NORMAL',
+          content: '',
+          visibility: 'PRIVATE',
+          pinned: false,
+          payload: {},
+        },
+      ],
+      attachments: [
+        {
+          id: 1,
+          uid: 'attachment-1',
+          creator_id: 1,
+          created_ts: 1,
+          updated_ts: 1,
+          filename: 'image.png',
+          blob: null,
+          type: 'image/png',
+          size: 10,
+          memo_id: 1,
+          storage_type: 'S3',
+          reference: 'https://example.com/image.png',
+          payload: {},
+        },
+      ],
+    }
+
+    const result = convertMemosToRote(data, 1)
+
+    expect(result.success).toBe(true)
+    expect(result.data?.notes[0].attachments[0].source?.provider).toBe('memos')
   })
 
   it('should handle invalid data', () => {
