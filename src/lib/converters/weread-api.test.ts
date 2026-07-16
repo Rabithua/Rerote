@@ -139,6 +139,180 @@ describe('fetchWereadFromApi', () => {
     expect(firstRequest[1]?.signal).toBeInstanceOf(AbortSignal)
   })
 
+  it('skips bookmark-only books and only requests each needed note type', async () => {
+    const bodies: Array<RequestBody> = []
+    const progress = vi.fn()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        await Promise.resolve()
+        const body = JSON.parse(String(init?.body)) as RequestBody
+        bodies.push(body)
+
+        if (body.api_name === '/user/notebooks') {
+          return jsonResponse({
+            books: [
+              {
+                bookId: 'bookmark-only',
+                noteCount: 0,
+                reviewCount: 0,
+                bookmarkCount: 8,
+                book: { bookId: 'bookmark-only', title: '只有书签' },
+              },
+              {
+                bookId: 'highlight-only',
+                noteCount: 2,
+                reviewCount: 0,
+                bookmarkCount: 0,
+                book: { bookId: 'highlight-only', title: '只有划线' },
+              },
+              {
+                bookId: 'review-only',
+                noteCount: 0,
+                reviewCount: 1,
+                bookmarkCount: 0,
+                book: { title: '只有想法' },
+              },
+            ],
+            hasMore: 0,
+          })
+        }
+        if (body.api_name === '/book/bookmarklist') {
+          return jsonResponse({
+            book: { bookId: body.bookId, title: '只有划线' },
+            updated: [
+              {
+                bookmarkId: 'mark-1',
+                markText: '一条划线',
+              },
+            ],
+          })
+        }
+        return jsonResponse({
+          reviews: [{ review: { reviewId: 'review-1', content: '一条想法' } }],
+          hasMore: 0,
+        })
+      }),
+    )
+
+    const result = await fetchWereadFromApi('wrk-key', progress)
+
+    expect(result.books.map((book) => book.meta.bookId)).toEqual([
+      'highlight-only',
+      'review-only',
+    ])
+    expect(
+      bodies.filter((body) => body.api_name === '/book/bookmarklist'),
+    ).toEqual([
+      expect.objectContaining({
+        api_name: '/book/bookmarklist',
+        bookId: 'highlight-only',
+      }),
+    ])
+    expect(
+      bodies.filter((body) => body.api_name === '/review/list/mine'),
+    ).toEqual([
+      expect.objectContaining({
+        api_name: '/review/list/mine',
+        bookid: 'review-only',
+      }),
+    ])
+    expect(bodies.some((body) => body.bookId === 'bookmark-only')).toBe(false)
+    expect(bodies.some((body) => body.bookid === 'bookmark-only')).toBe(false)
+    expect(progress).toHaveBeenLastCalledWith({
+      current: 2,
+      total: 2,
+      message: '获取完成，共导出 2 本书',
+    })
+  })
+
+  it('keeps the compatible request fallback when notebook counts are missing', async () => {
+    const bodies: Array<RequestBody> = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        await Promise.resolve()
+        const body = JSON.parse(String(init?.body)) as RequestBody
+        bodies.push(body)
+
+        if (body.api_name === '/user/notebooks') {
+          return jsonResponse({
+            books: [{ bookId: 'legacy', book: { title: '旧响应' } }],
+            hasMore: 0,
+          })
+        }
+        if (body.api_name === '/book/bookmarklist') {
+          return jsonResponse({
+            updated: [{ bookmarkId: 'mark-1', markText: '兼容划线' }],
+          })
+        }
+        return jsonResponse({ reviews: [], hasMore: 0 })
+      }),
+    )
+
+    await fetchWereadFromApi('wrk-key')
+
+    expect(bodies.map((body) => body.api_name)).toEqual([
+      '/user/notebooks',
+      '/book/bookmarklist',
+      '/review/list/mine',
+    ])
+  })
+
+  it('rejects accounts that only contain bookmarks without detail requests', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        jsonResponse({
+          books: [
+            {
+              bookId: 'bookmark-only',
+              noteCount: 0,
+              reviewCount: 0,
+              bookmarkCount: 5,
+            },
+          ],
+          hasMore: 0,
+        }),
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchWereadFromApi('wrk-key')).rejects.toThrow(
+      '微信读书账号中没有找到可导出的划线或想法',
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not return empty books when notebook counts are stale', async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      await Promise.resolve()
+      const body = JSON.parse(String(init?.body)) as RequestBody
+      if (body.api_name === '/user/notebooks') {
+        return jsonResponse({
+          books: [
+            {
+              bookId: 'stale-counts',
+              noteCount: 1,
+              reviewCount: 1,
+              book: { bookId: 'stale-counts', title: '计数已过期' },
+            },
+          ],
+          hasMore: 0,
+        })
+      }
+      if (body.api_name === '/book/bookmarklist') {
+        return jsonResponse({ updated: [] })
+      }
+      return jsonResponse({ reviews: [], hasMore: 0 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchWereadFromApi('wrk-key')).rejects.toThrow(
+      '微信读书账号中没有找到可导出的划线或想法',
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
   it('reports authentication failures', async () => {
     vi.stubGlobal(
       'fetch',
