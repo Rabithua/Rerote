@@ -20,6 +20,9 @@ interface GatewayResponse {
 interface NotebookBook {
   bookId: string
   sort?: number
+  noteCount?: number
+  reviewCount?: number
+  bookmarkCount?: number
   book?: WereadBookMeta
 }
 
@@ -44,7 +47,13 @@ export async function fetchWereadFromApi(
   apiKey: string,
   onProgress?: (progress: FetchProgress) => void,
 ): Promise<WereadApiSourceData> {
-  const notebooks = await fetchAllNotebooks(apiKey, onProgress)
+  const notebooks = (await fetchAllNotebooks(apiKey, onProgress)).filter(
+    hasExportableNotebookContent,
+  )
+  if (notebooks.length === 0) {
+    throw new Error('微信读书账号中没有找到可导出的划线或想法')
+  }
+
   const books = []
 
   for (let index = 0; index < notebooks.length; index++) {
@@ -55,14 +64,27 @@ export async function fetchWereadFromApi(
       message: `正在导出《${notebook.book?.title ?? notebook.bookId}》的笔记…`,
     })
 
+    const shouldFetchHighlights =
+      !isKnownCount(notebook.noteCount) || notebook.noteCount > 0
+    const shouldFetchReviews =
+      !isKnownCount(notebook.reviewCount) || notebook.reviewCount > 0
     const [bookmarkData, reviewItems] = await Promise.all([
-      gatewayRequest<BookmarkResponse>(apiKey, '/book/bookmarklist', {
-        bookId: notebook.bookId,
-      }),
-      fetchAllReviews(apiKey, notebook.bookId),
+      shouldFetchHighlights
+        ? gatewayRequest<BookmarkResponse>(apiKey, '/book/bookmarklist', {
+            bookId: notebook.bookId,
+          })
+        : Promise.resolve<BookmarkResponse>({ book: notebook.book }),
+      shouldFetchReviews
+        ? fetchAllReviews(apiKey, notebook.bookId)
+        : Promise.resolve([]),
     ])
 
-    books.push(buildBookSource(notebook, bookmarkData, reviewItems))
+    const book = buildBookSource(notebook, bookmarkData, reviewItems)
+    if (book.content.length > 0) books.push(book)
+  }
+
+  if (books.length === 0) {
+    throw new Error('微信读书账号中没有找到可导出的划线或想法')
   }
 
   onProgress?.({
@@ -109,6 +131,16 @@ async function fetchAllNotebooks(
   return books
 }
 
+function hasExportableNotebookContent(notebook: NotebookBook): boolean {
+  if (
+    !isKnownCount(notebook.noteCount) ||
+    !isKnownCount(notebook.reviewCount)
+  ) {
+    return true
+  }
+  return notebook.noteCount > 0 || notebook.reviewCount > 0
+}
+
 async function fetchAllReviews(
   apiKey: string,
   bookId: string,
@@ -148,6 +180,7 @@ function buildBookSource(
   bookmarkData: BookmarkResponse,
   reviews: Array<Record<string, unknown>>,
 ) {
+  const sourceMeta = bookmarkData.book ?? notebook.book
   const chapterTitles = new Map<string, string>()
   for (const chapter of bookmarkData.chapters ?? []) {
     if (chapter.chapterUid !== undefined && typeof chapter.title === 'string') {
@@ -203,8 +236,9 @@ function buildBookSource(
   }
 
   return {
-    meta: bookmarkData.book ??
-      notebook.book ?? { title: notebook.bookId, bookId: notebook.bookId },
+    meta: sourceMeta
+      ? { ...sourceMeta, bookId: sourceMeta.bookId ?? notebook.bookId }
+      : { title: notebook.bookId, bookId: notebook.bookId },
     content: [...chapters.values()],
   }
 }
@@ -270,4 +304,8 @@ function timeValue(value: unknown): number | string | undefined {
   return typeof value === 'string' || typeof value === 'number'
     ? value
     : undefined
+}
+
+function isKnownCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
