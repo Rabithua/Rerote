@@ -18,6 +18,44 @@ export interface FlomoSourceData {
   filename?: string
 }
 
+export interface WereadSourceData {
+  meta: WereadBookMeta
+  content: Array<WereadChapter>
+}
+
+export interface WereadApiSourceData {
+  books: Array<WereadSourceData>
+}
+
+export interface WereadTextSourceData {
+  text: string
+  filename?: string
+}
+
+export interface WereadBookMeta {
+  bookId?: string
+  title: string
+  author?: string
+  category?: string
+}
+
+export interface WereadChapter {
+  chapterUid?: number | string
+  chapterTitle?: string
+  items: Array<WereadNoteItem>
+}
+
+export interface WereadNoteItem {
+  type: 'highlight' | 'review'
+  bookmarkId?: string
+  reviewId?: string
+  markText?: string
+  abstract?: string
+  content?: string
+  createTime?: number | string
+  createTimeFormatted?: string
+}
+
 export interface User {
   id: number
   created_ts: number

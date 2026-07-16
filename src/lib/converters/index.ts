@@ -1,21 +1,26 @@
 import { convertMemosToRote } from './memos-to-rote'
 import { convertFlomoToRote, isFlomoSourceData } from './flomo-to-rote'
 import { fetchMemosFromApi, validateMemosApiConfig } from './memos-api'
+import { convertWereadToRote, isWereadSourceData } from './weread-to-rote'
+import { fetchWereadFromApi } from './weread-api'
 import type {
   ConversionOptions,
   ConversionResult,
   FlomoSourceData,
   MemoSourceData,
   SQLiteSourceData,
+  WereadSourceData,
+  WereadTextSourceData,
 } from './types'
 import type { FetchProgress, MemosApiConfig } from './memos-api'
 
-export { fetchMemosFromApi, validateMemosApiConfig }
+export { fetchMemosFromApi, fetchWereadFromApi, validateMemosApiConfig }
 export type { MemosApiConfig, FetchProgress }
 
 export enum Platform {
   MEMOS = 'memos',
   FLOMO = 'flomo',
+  WEREAD = 'weread',
 }
 
 export type DataSourceMode = 'file' | 'api'
@@ -142,6 +147,57 @@ export const converters: Array<Converter> = [
           description: {
             zh: '上传 flomo 导出的 HTML 文件或 zip 压缩包（不包含附件）',
             en: 'Upload a flomo exported HTML file or zip archive (attachments are not included)',
+          },
+        },
+      ],
+    },
+  },
+  {
+    platform: Platform.WEREAD,
+    name: '微信读书',
+    description: {
+      zh: '将微信读书的划线和想法转换为 Rote 笔记',
+      en: 'Convert WeRead highlights and reviews to Rote notes',
+    },
+    convert: convertWereadToRote,
+    validate: (data: any): data is WereadSourceData | WereadTextSourceData =>
+      isWereadSourceData(data),
+    supportedModes: ['api', 'file'],
+    apiDescription: {
+      zh: '使用微信读书官方 Skill API Key 一键获取全部划线和想法，数据直接从微信读书读取。',
+      en: 'Use the official WeRead Skill API Key to fetch all highlights and reviews directly from WeRead.',
+    },
+    acceptedFormats: '.json,.txt',
+    usageInstructions: {
+      steps: {
+        zh: [
+          '在微信读书 Skill 页面登录并获取 API Key',
+          '推荐使用 API Key 一键获取；也可上传 JSON/TXT 离线备份',
+          '点击开始转换按钮，等待处理完成',
+          '下载转换后的 Rote 格式数据文件',
+          '在 Rote 网页「实验室」页面的数据导入模块导入该文件',
+        ],
+        en: [
+          'Sign in on the WeRead Skill page and obtain an API Key',
+          'Use the API Key for one-click fetching, or upload a JSON/TXT offline backup',
+          'Click the start conversion button and wait for processing to complete',
+          'Download the converted Rote format data file',
+          'Import the file in the Data Import module on the Rote Web Labs page',
+        ],
+      },
+      dataSourceOptions: [
+        {
+          mode: 'api',
+          description: {
+            zh: '通过微信读书官方 Skill API 获取全部笔记（推荐）',
+            en: 'Fetch all notes through the official WeRead Skill API (recommended)',
+          },
+        },
+        {
+          mode: 'file',
+          description: {
+            zh: '上传微信读书笔记 JSON 或 TXT 文件',
+            en: 'Upload a WeRead notes JSON or TXT file',
           },
         },
       ],
