@@ -6,14 +6,15 @@ import type { ExecuteImportOptions } from './executor'
 import type { ImportApi, ImportPayload, PreparedMedia } from './types'
 
 vi.mock('./media', () => ({
-  prepareMedia: async (blob: Blob): Promise<PreparedMedia> => ({
-    original: new Blob([blob], { type: 'image/png' }),
-    preview: new Blob(['RIFFxxxxWEBPbytes'], { type: 'image/webp' }),
-    width: 10,
-    height: 10,
-    hash: 'test-hash',
-    kind: 'image',
-  }),
+  prepareMedia: (blob: Blob): Promise<PreparedMedia> =>
+    Promise.resolve({
+      original: new Blob([blob], { type: 'image/png' }),
+      preview: new Blob(['RIFFxxxxWEBPbytes'], { type: 'image/webp' }),
+      width: 10,
+      height: 10,
+      hash: 'test-hash',
+      kind: 'image',
+    }),
 }))
 afterEach(() => vi.unstubAllGlobals())
 
@@ -85,23 +86,25 @@ function harness(notes: Array<RoteNote>) {
         maxAttachments: 9,
       },
     },
-    plan: vi.fn(async (payload: ImportPayload) => {
+    plan: vi.fn((payload: ImportPayload) => {
       events.push(`plan:${payload.notes.length}`)
-      return { noteIndexes: payload.notes.map((_, index) => index) }
+      return Promise.resolve({
+        noteIndexes: payload.notes.map((_, index) => index),
+      })
     }),
-    commit: vi.fn(async (payload: ImportPayload) => {
+    commit: vi.fn((payload: ImportPayload) => {
       events.push(`commit:${payload.notes.length}`)
-      return {
+      return Promise.resolve({
         results: payload.notes.map((_, index) => ({
           index,
           id: `target-${index}`,
           status: 'created' as const,
         })),
-      }
+      })
     }),
-    presign: vi.fn(async () => {
+    presign: vi.fn(() => {
       events.push('presign')
-      return {
+      return Promise.resolve({
         reservationId: `reservation-${attachmentId}`,
         items: [
           {
@@ -118,24 +121,26 @@ function harness(notes: Array<RoteNote>) {
             },
           },
         ],
-      }
+      })
     }),
-    finalize: vi.fn(async () => {
+    finalize: vi.fn(() => {
       events.push('finalize')
-      return [
+      return Promise.resolve([
         {
           ...note(0, 1).attachments[0],
           id: `attachment-${attachmentId++}`,
           compressUrl: 'https://storage.test/preview',
           storage: 'R2',
         },
-      ]
+      ])
     }),
-    cleanup: vi.fn(async () => {
+    cleanup: vi.fn(() => {
       events.push('cleanup')
+      return Promise.resolve()
     }),
-    cancelReservation: vi.fn(async () => {
+    cancelReservation: vi.fn(() => {
       events.push('cancel-reservation')
+      return Promise.resolve()
     }),
   }
   const controller = new AbortController()
@@ -150,14 +155,14 @@ function harness(notes: Array<RoteNote>) {
     onProgress: vi.fn(),
     onResult: vi.fn(),
   }
-  const fetch = vi.fn(
-    async (_url: string | URL | Request, init?: RequestInit) => {
-      events.push(init?.method === 'PUT' ? 'put' : 'download')
-      return new Response(init?.method === 'PUT' ? null : 'original bytes', {
+  const fetch = vi.fn((_url: string | URL | Request, init?: RequestInit) => {
+    events.push(init?.method === 'PUT' ? 'put' : 'download')
+    return Promise.resolve(
+      new Response(init?.method === 'PUT' ? null : 'original bytes', {
         status: 200,
-      })
-    },
-  )
+      }),
+    )
+  })
   vi.stubGlobal('fetch', fetch)
   return { api, controller, options, events, fetch }
 }
@@ -239,11 +244,12 @@ describe('formal import executor', () => {
   })
   test('partial attachment failure never submits a note and cleans finalized siblings; retry succeeds', async () => {
     const run = harness([note(1, 2)])
-    run.fetch.mockImplementation(
-      async (url, init) =>
+    run.fetch.mockImplementation((url, init) =>
+      Promise.resolve(
         new Response(init?.method === 'PUT' ? null : 'bytes', {
           status: String(url).endsWith('/1/1') ? 500 : 200,
         }),
+      ),
     )
     await executeImport(run.options)
     expect(run.api.commit).not.toHaveBeenCalled()
@@ -255,9 +261,8 @@ describe('formal import executor', () => {
         attachmentIndex: 1,
       }),
     )
-    run.fetch.mockImplementation(
-      async (_url, init) =>
-        new Response(init?.method === 'PUT' ? null : 'bytes'),
+    run.fetch.mockImplementation((_url, init) =>
+      Promise.resolve(new Response(init?.method === 'PUT' ? null : 'bytes')),
     )
     await executeImport(run.options)
     expect(run.api.commit).toHaveBeenCalledTimes(1)

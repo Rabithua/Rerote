@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProxyAgent, fetch as undiciFetch } from 'undici'
 
 import { proxyWereadRequest } from './weread-proxy'
@@ -20,6 +20,11 @@ function request(body: string, apiKey = 'wrk-secret') {
 }
 
 describe('proxyWereadRequest', () => {
+  beforeEach(() => {
+    // Both transport branches stay mocked, including CI environments without HTTPS_PROXY.
+    vi.stubGlobal('fetch', undiciFetch)
+  })
+
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
