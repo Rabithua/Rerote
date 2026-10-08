@@ -34,6 +34,8 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
+    "mdast-util-from-markdown": "^2.1.0",
+    "mdast-util-to-string": "^4.0.0",
     "nitro": "latest",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",

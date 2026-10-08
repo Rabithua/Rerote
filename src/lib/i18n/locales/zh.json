@@ -2,7 +2,7 @@
   "common": {
     "appName": "Rerote",
     "dataMigration": "数据迁移",
-    "convertData": "将其他笔记平台的数据转换为 Rote 格式，轻松完成迁移。",
+    "convertData": "连接实例，选择来源，预览笔记并直接导入 Rote",
     "close": "关闭",
     "download": "下载",
     "downloadFile": "下载文件",
@@ -48,7 +48,8 @@
   },
   "fileUpload": {
     "selectFile": "点击选择文件或拖拽文件到此处",
-    "supportedFormats": "支持 {{formats}} 格式"
+    "supportedFormats": "支持 {{formats}} 格式",
+    "removeFile": "移除已选文件"
   },
   "userSelector": {
     "selectUser": "选择要转换的用户",
@@ -85,5 +86,80 @@
   "language": {
     "zh": "中文",
     "en": "English"
+  },
+  "direct": {
+    "connectTitle": "1. 连接 Rote 实例",
+    "instanceUrl": "Rote 实例地址",
+    "connect": "连接并检查能力",
+    "connecting": "连接中…",
+    "connected": "账号、权限和浏览器 CORS 已检查",
+    "disconnect": "断开连接",
+    "keyHint": "需要 GETROTE 和 SENDROTE；图片需要 UPLOADATTACHMENT，视频还需要 UPLOADVIDEO。OpenKey 仅留在当前会话内存。",
+    "permissionsSummary": "图片：{{images}} · 视频：{{video}} · 覆盖：{{overwrite}}",
+    "allowed": "可用",
+    "unavailable": "不可用",
+    "previewTitle": "3. 预览并选择笔记",
+    "selected": "已选择 {{count}} / {{total}} 条",
+    "selectAll": "全选",
+    "selectNone": "清空选择",
+    "search": "搜索正文或标签",
+    "imageOnly": "仅图片笔记",
+    "attachments": "{{count}} 个附件",
+    "previewContent": "展开完整正文与附件",
+    "image": "图片",
+    "previous": "上一页",
+    "next": "下一页",
+    "privateHint": "默认私密，已有来源的笔记自动跳过。",
+    "preserveHint": "保留来源可见性；已有来源的笔记默认跳过。",
+    "blankSkipped": "已跳过 {{count}} 条空白记录。",
+    "overwrite": "明确选择：覆盖已有来源笔记（需要 EDITROTE）",
+    "import": "4. 直接导入所选笔记",
+    "backup": "下载 JSON 备份",
+    "cancel": "取消",
+    "cancelling": "取消中，正在清理资源…",
+    "retry": "重试失败或取消的笔记",
+    "connectFirst": "连接 Rote 实例后即可直接导入。",
+    "progress": "导入进度",
+    "summary": "成功 {{success}} · 跳过 {{skipped}} · 失败或取消 {{failed}}",
+    "resultDetails": "查看逐条结果与失败明细",
+    "attachmentNumber": "附件 {{count}}",
+    "stages": {
+      "plan": "检查来源去重",
+      "download": "下载原件",
+      "encode": "浏览器处理图片或视频",
+      "upload": "上传附件",
+      "finalize": "确认附件",
+      "commit": "提交笔记",
+      "cleanup": "清理未绑定资源"
+    },
+    "statuses": {
+      "created": "导入成功",
+      "updated": "覆盖成功",
+      "skipped": "已存在，跳过",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },
+    "errors": {
+      "invalid_instance_url": "请输入没有凭据、查询参数和片段的 HTTP(S) 实例地址。",
+      "instance_upgrade_required": "实例不支持正式 OpenKey 导入，请升级 Rote 后重试。",
+      "network_or_cors": "无法连接，请检查地址、网络和实例 CORS 是否允许当前 Rerote 地址。",
+      "attachment_network_or_cors": "附件下载或上传失败，请检查来源/存储的 CORS 和网络。",
+      "permission": "OpenKey 缺少 {{permission}} 权限。",
+      "operation_failed": "操作失败：{{code}}",
+      "unsupported_media": "附件类型不受支持；音频和文件不能作为图片上传。",
+      "image_decode_failed": "浏览器无法解码该图片，请提供支持的原图格式。",
+      "webp_encode_failed": "WebP 编码失败，未上传替代预览。",
+      "preview_limit_exceeded": "全部 WebP 阶梯均超过 512 KiB，附件未上传。",
+      "video_decode_failed": "浏览器无法生成视频封面，附件未上传。",
+      "attachment_permission_required": "实例或 OpenKey 不允许上传附件。",
+      "video_permission_required": "实例或 OpenKey 不允许上传视频。",
+      "overwrite_permission_required": "覆盖需要 EDITROTE 权限。",
+      "attachment_size_exceeded": "原件大小超过实例限制。",
+      "attachment_count_exceeded": "附件数量超过实例限制。",
+      "cleanup_pending": "资源清理未完成，请重试；已绑定附件受保护。",
+      "cancelled_retry_to_confirm": "已取消，重试会先检查来源确认提交结果。",
+      "commit_result_unknown": "提交结果未知，请重试；来源检查可避免重复导入。",
+      "dinox_invalid_date": "创建时间缺失或无效。"
+    }
   }
 }

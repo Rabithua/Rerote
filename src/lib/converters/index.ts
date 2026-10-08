@@ -1,3 +1,4 @@
+import { convertDinoxToRote, isDinoxSourceData } from './dinox-to-rote'
 import { convertMemosToRote } from './memos-to-rote'
 import { convertFlomoToRote, isFlomoSourceData } from './flomo-to-rote'
 import { fetchMemosFromApi, validateMemosApiConfig } from './memos-api'
@@ -18,6 +19,7 @@ export { fetchMemosFromApi, fetchWereadFromApi, validateMemosApiConfig }
 export type { MemosApiConfig, FetchProgress }
 
 export enum Platform {
+  DINOX = 'dinox',
   MEMOS = 'memos',
   FLOMO = 'flomo',
   WEREAD = 'weread',
@@ -48,6 +50,34 @@ export interface Converter {
 }
 
 export const converters: Array<Converter> = [
+  {
+    platform: Platform.DINOX,
+    name: 'Dinox',
+    description: {
+      zh: '导入 Dinox JSON 笔记和远程图片',
+      en: 'Import Dinox JSON notes and remote images',
+    },
+    convert: convertDinoxToRote,
+    validate: isDinoxSourceData,
+    supportedModes: ['file'],
+    acceptedFormats: '.json',
+    usageInstructions: {
+      steps: {
+        zh: [
+          '连接 Rote 实例并检查权限',
+          '上传 Dinox JSON 导出文件',
+          '预览并勾选笔记',
+          '直接导入，查看结果；可下载 JSON 备份',
+        ],
+        en: [
+          'Connect your Rote instance and check permissions',
+          'Upload a Dinox JSON export',
+          'Preview and select notes',
+          'Import directly, review results; optionally download a JSON backup',
+        ],
+      },
+    },
+  },
   {
     platform: Platform.MEMOS,
     name: 'Memos',
@@ -84,15 +114,15 @@ export const converters: Array<Converter> = [
           '准备要转换的 Memos 数据',
           '选择数据的来源方式',
           '点击开始转换按钮，等待处理完成',
-          '下载转换后的 Rote 格式数据文件',
-          '在 Rote 网页「实验室」页面的数据导入模块导入该文件',
+          '预览并勾选要导入的笔记',
+          '直接导入并查看结果，可选下载 JSON 备份',
         ],
         en: [
           'Prepare the Memos data you want to convert',
           'Select the data source method',
           'Click the start conversion button and wait for processing to complete',
-          'Download the converted Rote format data file',
-          'Import the file in the Data Import module on the Rote Web Labs page',
+          'Preview and select the notes to import',
+          'Import directly and review results; optionally download a JSON backup',
         ],
       },
       dataSourceOptions: [
@@ -130,15 +160,15 @@ export const converters: Array<Converter> = [
           '从 flomo 网页版导出数据',
           '上传 flomo 导出的 HTML 文件，或包含 HTML 的 zip 压缩包。flomo 官方导出文件不携带附件，因此无法迁移附件',
           '点击开始转换按钮，等待处理完成',
-          '下载转换后的 Rote 格式数据文件',
-          '在 Rote 网页「实验室」页面的数据导入模块导入该文件',
+          '预览并勾选要导入的笔记',
+          '直接导入并查看结果，可选下载 JSON 备份',
         ],
         en: [
           'Export data from flomo Web',
           'Upload the flomo exported HTML file, or a zip archive containing it. flomo export files do not include attachments, so attachments cannot be migrated',
           'Click the start conversion button and wait for processing to complete',
-          'Download the converted Rote format data file',
-          'Import the file in the Data Import module on the Rote Web Labs page',
+          'Preview and select the notes to import',
+          'Import directly and review results; optionally download a JSON backup',
         ],
       },
       dataSourceOptions: [
@@ -174,15 +204,15 @@ export const converters: Array<Converter> = [
           '在微信读书 Skill 页面登录并获取 API Key',
           '推荐使用 API Key 一键获取；也可上传 JSON/TXT 离线备份',
           '点击开始转换按钮，等待处理完成',
-          '下载转换后的 Rote 格式数据文件',
-          '在 Rote 网页「实验室」页面的数据导入模块导入该文件',
+          '预览并勾选要导入的笔记',
+          '直接导入并查看结果，可选下载 JSON 备份',
         ],
         en: [
           'Sign in on the WeRead Skill page and obtain an API Key',
           'Use the API Key for one-click fetching, or upload a JSON/TXT offline backup',
           'Click the start conversion button and wait for processing to complete',
-          'Download the converted Rote format data file',
-          'Import the file in the Data Import module on the Rote Web Labs page',
+          'Preview and select the notes to import',
+          'Import directly and review results; optionally download a JSON backup',
         ],
       },
       dataSourceOptions: [

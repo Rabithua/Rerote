@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { FileText, Upload, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 interface FileUploadProps {
-  onFileSelect: (file: File) => void
+  onFileSelect: (file: File | null) => void
   acceptedFormats?: string
 }
 
@@ -17,28 +17,41 @@ export function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-      onFileSelect(file)
-    }
-  }
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (file) {
+        setSelectedFile(file)
+        onFileSelect(file)
+      }
+    },
+    [onFileSelect],
+  )
 
-  const handleRemoveFile = () => {
+  const handleRemoveFile = useCallback(() => {
     setSelectedFile(null)
+    onFileSelect(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }
+  }, [onFileSelect])
 
   return (
     <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 p-5">
       <div className="space-y-4">
         {!selectedFile ? (
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={t('fileUpload.selectFile')}
             className="cursor-pointer flex items-center gap-4"
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
           >
             <Upload className="size-8" />
             <div>
@@ -72,6 +85,7 @@ export function FileUpload({
               variant="ghost"
               size="icon"
               onClick={handleRemoveFile}
+              aria-label={t('fileUpload.removeFile')}
               className="text-gray-400 hover:text-gray-600"
             >
               <X className="h-4 w-4" />

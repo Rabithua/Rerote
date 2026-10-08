@@ -2,7 +2,7 @@
   "common": {
     "appName": "Rerote",
     "dataMigration": "Data Migration",
-    "convertData": "Convert data from other note platforms to Rote format for easy migration.",
+    "convertData": "Connect your instance, choose a source, preview notes and import into Rote",
     "close": "Close",
     "download": "Download",
     "downloadFile": "Download File",
@@ -48,7 +48,8 @@
   },
   "fileUpload": {
     "selectFile": "Click to select a file or drag and drop here",
-    "supportedFormats": "Supports {{formats}} format"
+    "supportedFormats": "Supports {{formats}} format",
+    "removeFile": "Remove selected file"
   },
   "userSelector": {
     "selectUser": "Select User to Convert",
@@ -85,5 +86,80 @@
   "language": {
     "zh": "中文",
     "en": "English"
+  },
+  "direct": {
+    "connectTitle": "1. Connect a Rote instance",
+    "instanceUrl": "Rote instance URL",
+    "connect": "Connect and check capabilities",
+    "connecting": "Connecting…",
+    "connected": "Account, permissions and browser CORS checked",
+    "disconnect": "Disconnect",
+    "keyHint": "Requires GETROTE and SENDROTE; images require UPLOADATTACHMENT and videos also require UPLOADVIDEO. OpenKey stays only in session memory.",
+    "permissionsSummary": "Images: {{images}} · Video: {{video}} · Overwrite: {{overwrite}}",
+    "allowed": "Available",
+    "unavailable": "Unavailable",
+    "previewTitle": "3. Preview and select notes",
+    "selected": "Selected {{count}} / {{total}} notes",
+    "selectAll": "Select all",
+    "selectNone": "Clear selection",
+    "search": "Search content or tags",
+    "imageOnly": "Image-only note",
+    "attachments": "{{count}} attachments",
+    "previewContent": "Expand full content and attachments",
+    "image": "Image",
+    "previous": "Previous",
+    "next": "Next",
+    "privateHint": "Private by default. Existing source notes are skipped.",
+    "preserveHint": "Preserves source visibility. Existing source notes are skipped by default.",
+    "blankSkipped": "Skipped {{count}} blank records.",
+    "overwrite": "Explicitly overwrite existing source notes (requires EDITROTE)",
+    "import": "4. Import selected notes",
+    "backup": "Download JSON backup",
+    "cancel": "Cancel",
+    "cancelling": "Cancelling and cleaning resources…",
+    "retry": "Retry failed or cancelled notes",
+    "connectFirst": "Connect your Rote instance to import directly.",
+    "progress": "Import progress",
+    "summary": "Success {{success}} · Skipped {{skipped}} · Failed or cancelled {{failed}}",
+    "resultDetails": "View individual results and failure details",
+    "attachmentNumber": "Attachment {{count}}",
+    "stages": {
+      "plan": "Checking source identities",
+      "download": "Downloading originals",
+      "encode": "Processing media in browser",
+      "upload": "Uploading attachments",
+      "finalize": "Confirming attachments",
+      "commit": "Importing notes",
+      "cleanup": "Cleaning unbound resources"
+    },
+    "statuses": {
+      "created": "Imported",
+      "updated": "Overwritten",
+      "skipped": "Already exists, skipped",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "errors": {
+      "invalid_instance_url": "Enter an HTTP(S) URL without credentials, query parameters or fragments.",
+      "instance_upgrade_required": "This instance does not support formal OpenKey imports. Upgrade Rote and reconnect.",
+      "network_or_cors": "Connection failed. Check the URL, network and instance CORS allowlist for this Rerote origin.",
+      "attachment_network_or_cors": "Attachment download or upload failed. Check source/storage CORS and network.",
+      "permission": "OpenKey requires {{permission}} permission.",
+      "operation_failed": "Operation failed: {{code}}",
+      "unsupported_media": "Unsupported attachment type. Audio and files cannot be uploaded as images.",
+      "image_decode_failed": "The browser cannot decode this image. Supply a supported original format.",
+      "webp_encode_failed": "WebP encoding failed. No substitute preview was uploaded.",
+      "preview_limit_exceeded": "All WebP attempts exceeded 512 KiB. The attachment was not uploaded.",
+      "video_decode_failed": "The browser could not generate a video poster. The attachment was not uploaded.",
+      "attachment_permission_required": "The instance or OpenKey does not allow attachment uploads.",
+      "video_permission_required": "The instance or OpenKey does not allow video uploads.",
+      "overwrite_permission_required": "Overwriting requires EDITROTE permission.",
+      "attachment_size_exceeded": "The original exceeds the instance size limit.",
+      "attachment_count_exceeded": "The note exceeds the instance attachment count limit.",
+      "cleanup_pending": "Resource cleanup is pending. Retry; bound attachments are protected.",
+      "cancelled_retry_to_confirm": "Cancelled. Retry checks the source to confirm the commit outcome.",
+      "commit_result_unknown": "Commit outcome is unknown. Retry checks the source to avoid duplicate imports.",
+      "dinox_invalid_date": "Creation time is missing or invalid."
+    }
   }
 }
