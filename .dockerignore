@@ -1,0 +1,8 @@
+.git
+node_modules
+.output
+.nitro
+.tanstack
+.DS_Store
+.env
+.env.*
