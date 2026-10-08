@@ -55,10 +55,7 @@ export function TargetConnection({
     setError('')
   }, [onConnect])
   return (
-    <section
-      className="flex flex-col gap-3 bg-muted/30 rounded-md p-4"
-      aria-labelledby="target-heading"
-    >
+    <section className="flex flex-col gap-3" aria-labelledby="target-heading">
       <div
         role="heading"
         aria-level={2}
