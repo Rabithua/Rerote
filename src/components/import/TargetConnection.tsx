@@ -111,7 +111,7 @@ export function TargetConnection({
                 type="url"
                 value={instanceUrl}
                 onChange={(event) => setInstanceUrl(event.target.value)}
-                placeholder="https://rote.example.com"
+                placeholder="https://api.rote.ink"
                 disabled={connecting || busy}
               />
             </div>
