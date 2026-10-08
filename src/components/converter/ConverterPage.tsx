@@ -10,10 +10,8 @@ import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 import type { ConversionResult } from '@/lib/converters/types'
 import type { SourceCredentials } from '@/lib/import/attachments'
-import type { RoteClient } from '@/lib/import/rote-client'
 import type { DataSourceMode, FetchProgress } from '@/lib/converters'
-import { DirectImport } from '@/components/import/DirectImport'
-import { TargetConnection } from '@/components/import/TargetConnection'
+import { ConversionOutput } from '@/components/converter/ConversionOutput'
 import Logo from '@/components/logo'
 import { Footer } from '@/components/Footer'
 import {
@@ -55,7 +53,6 @@ export function ConverterPage() {
   const [file, setFile] = useState<File | null>(null)
   const [conversionResult, setConversionResult] =
     useState<ConversionResult | null>(null)
-  const [targetClient, setTargetClient] = useState<RoteClient | null>(null)
   const [sourceCredentials, setSourceCredentials] = useState<
     SourceCredentials | undefined
   >()
@@ -307,12 +304,6 @@ export function ConverterPage() {
           </div>
           <LanguageSwitcher />
         </div>
-
-        <TargetConnection
-          client={targetClient}
-          onConnect={setTargetClient}
-          busy={isImporting || isConverting}
-        />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
           <div className="lg:col-span-8">
@@ -672,10 +663,9 @@ export function ConverterPage() {
             {conversionResult?.data &&
             conversionResult.data.notes.length > 0 ? (
               <div className="py-6">
-                <DirectImport
-                  key={`${conversionResult.data.notes[0].id}:${targetClient?.info.owner.id ?? 'offline'}:${targetClient?.baseUrl ?? ''}`}
+                <ConversionOutput
                   result={conversionResult}
-                  client={targetClient}
+                  busy={isImporting || isConverting}
                   preserveVisibility={preserveVisibility}
                   sourceCredentials={sourceCredentials}
                   onBusyChange={setIsImporting}

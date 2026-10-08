@@ -2,7 +2,7 @@
   "common": {
     "appName": "Rerote",
     "dataMigration": "Data Migration",
-    "convertData": "Connect your instance, choose a source, preview notes and import into Rote",
+    "convertData": "Convert source data, export JSON or import directly into Rote",
     "close": "Close",
     "download": "Download",
     "downloadFile": "Download File",
@@ -88,7 +88,7 @@
     "en": "English"
   },
   "direct": {
-    "connectTitle": "1. Connect a Rote instance",
+    "connectTitle": "Connect a Rote instance",
     "instanceUrl": "Rote instance URL",
     "connect": "Connect and check capabilities",
     "connecting": "Connecting…",
@@ -98,7 +98,7 @@
     "permissionsSummary": "Images: {{images}} · Video: {{video}} · Overwrite: {{overwrite}}",
     "allowed": "Available",
     "unavailable": "Unavailable",
-    "previewTitle": "3. Preview and select notes",
+    "previewTitle": "Preview and select notes",
     "selected": "Selected {{count}} / {{total}} notes",
     "selectAll": "Select all",
     "selectNone": "Clear selection",
@@ -113,7 +113,7 @@
     "preserveHint": "Preserves source visibility. Existing source notes are skipped by default.",
     "blankSkipped": "Skipped {{count}} blank records.",
     "overwrite": "Explicitly overwrite existing source notes (requires EDITROTE)",
-    "import": "4. Import selected notes",
+    "import": "Import selected notes directly",
     "backup": "Download JSON backup",
     "cancel": "Cancel",
     "cancelling": "Cancelling and cleaning resources…",
@@ -161,5 +161,12 @@
       "commit_result_unknown": "Commit outcome is unknown. Retry checks the source to avoid duplicate imports.",
       "dinox_invalid_date": "Creation time is missing or invalid."
     }
+  },
+  "output": {
+    "title": "Conversion result",
+    "export": "Export JSON",
+    "direct": "Import directly into Rote",
+    "exportHint": "Download the Rote JSON file and import it on the Rote Web Labs page. No instance connection needed.",
+    "download": "Download JSON file"
   }
 }

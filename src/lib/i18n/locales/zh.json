@@ -2,7 +2,7 @@
   "common": {
     "appName": "Rerote",
     "dataMigration": "数据迁移",
-    "convertData": "连接实例，选择来源，预览笔记并直接导入 Rote",
+    "convertData": "转换来源数据，导出 JSON 或直接导入 Rote",
     "close": "关闭",
     "download": "下载",
     "downloadFile": "下载文件",
@@ -88,7 +88,7 @@
     "en": "English"
   },
   "direct": {
-    "connectTitle": "1. 连接 Rote 实例",
+    "connectTitle": "连接 Rote 实例",
     "instanceUrl": "Rote 实例地址",
     "connect": "连接并检查能力",
     "connecting": "连接中…",
@@ -98,7 +98,7 @@
     "permissionsSummary": "图片：{{images}} · 视频：{{video}} · 覆盖：{{overwrite}}",
     "allowed": "可用",
     "unavailable": "不可用",
-    "previewTitle": "3. 预览并选择笔记",
+    "previewTitle": "预览并选择笔记",
     "selected": "已选择 {{count}} / {{total}} 条",
     "selectAll": "全选",
     "selectNone": "清空选择",
@@ -113,7 +113,7 @@
     "preserveHint": "保留来源可见性；已有来源的笔记默认跳过。",
     "blankSkipped": "已跳过 {{count}} 条空白记录。",
     "overwrite": "明确选择：覆盖已有来源笔记（需要 EDITROTE）",
-    "import": "4. 直接导入所选笔记",
+    "import": "直接导入所选笔记",
     "backup": "下载 JSON 备份",
     "cancel": "取消",
     "cancelling": "取消中，正在清理资源…",
@@ -161,5 +161,12 @@
       "commit_result_unknown": "提交结果未知，请重试；来源检查可避免重复导入。",
       "dinox_invalid_date": "创建时间缺失或无效。"
     }
+  },
+  "output": {
+    "title": "转换结果",
+    "export": "导出 JSON",
+    "direct": "直接导入 Rote",
+    "exportHint": "下载 Rote 格式的 JSON 文件，在 Rote 网页「实验室」中导入。无需连接实例。",
+    "download": "下载 JSON 文件"
   }
 }
