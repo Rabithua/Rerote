@@ -51,34 +51,6 @@ export interface Converter {
 
 export const converters: Array<Converter> = [
   {
-    platform: Platform.DINOX,
-    name: 'Dinox',
-    description: {
-      zh: '导入 Dinox JSON 笔记和远程图片',
-      en: 'Import Dinox JSON notes and remote images',
-    },
-    convert: convertDinoxToRote,
-    validate: isDinoxSourceData,
-    supportedModes: ['file'],
-    acceptedFormats: '.json',
-    usageInstructions: {
-      steps: {
-        zh: [
-          '连接 Rote 实例并检查权限',
-          '上传 Dinox JSON 导出文件',
-          '预览并勾选笔记',
-          '直接导入，查看结果；可下载 JSON 备份',
-        ],
-        en: [
-          'Connect your Rote instance and check permissions',
-          'Upload a Dinox JSON export',
-          'Preview and select notes',
-          'Import directly, review results; optionally download a JSON backup',
-        ],
-      },
-    },
-  },
-  {
     platform: Platform.MEMOS,
     name: 'Memos',
     description: {
@@ -231,6 +203,34 @@ export const converters: Array<Converter> = [
           },
         },
       ],
+    },
+  },
+  {
+    platform: Platform.DINOX,
+    name: 'Dinox',
+    description: {
+      zh: '导入 Dinox JSON 笔记和远程图片',
+      en: 'Import Dinox JSON notes and remote images',
+    },
+    convert: convertDinoxToRote,
+    validate: isDinoxSourceData,
+    supportedModes: ['file'],
+    acceptedFormats: '.json',
+    usageInstructions: {
+      steps: {
+        zh: [
+          '连接 Rote 实例并检查权限',
+          '上传 Dinox JSON 导出文件',
+          '预览并勾选笔记',
+          '直接导入，查看结果；可下载 JSON 备份',
+        ],
+        en: [
+          'Connect your Rote instance and check permissions',
+          'Upload a Dinox JSON export',
+          'Preview and select notes',
+          'Import directly, review results; optionally download a JSON backup',
+        ],
+      },
     },
   },
 ]
