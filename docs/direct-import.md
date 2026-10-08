@@ -2,7 +2,7 @@
 
 连接 Rote 实例地址与 OpenKey，选择 Memos、flomo、微信读书或 Dinox 来源，转换后预览并勾选笔记，再直接导入。JSON 下载保留为可选备份。
 
-OpenKey 仅保存在当前页面内存，刷新或断开连接后需要重新输入。连接通过实际浏览器请求检查账号、权限、导入协议和实例 CORS。旧实例需要升级到支持 OpenKey 正式导入的版本。基础权限为 GETROTE、SENDROTE；附件还需要 UPLOADATTACHMENT，视频需要 UPLOADVIDEO 和账号的视频能力；覆盖需明确勾选并具备 EDITROTE。微信读书产生的文章 upsert 还需要 SENDARTICLE、EDITARTICLE。
+OpenKey 仅保存在当前页面内存，刷新或断开连接后需要重新输入。连接通过实际浏览器请求 `GET /v2/api/openkey/permissions` 检查账号、权限、导入协议和实例 CORS。旧实例需要升级到支持 OpenKey 正式导入的版本。基础权限为 GETROTE、SENDROTE；附件还需要 UPLOADATTACHMENT，视频需要 UPLOADVIDEO 和账号的视频能力；覆盖需明确勾选并具备 EDITROTE。微信读书产生的文章 upsert 还需要 SENDARTICLE、EDITARTICLE。
 
 默认私密、跳过已有来源。执行器先对所有选中笔记按 50 条调用 plan，再下载、处理、上传附件，最后每批最多提交 50 条到正式 import。保留历史 createdAt、来源映射和附件顺序。附件部分失败时整条笔记不提交，成功上传的未绑定资源进入清理流程。取消停止后续工作，已发出的提交等待结果后再清理；响应丢失时暂留附件，重试先重新 plan，确认此前提交的结果，避免再次转存已存在的笔记。清理失败的资源留在页面内存并在重试前再次清理。
 
