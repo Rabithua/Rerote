@@ -15,6 +15,7 @@ export interface SourceCredentials {
 export interface AttachmentResources {
   ids: Array<string>
   reservations: Array<string>
+  commitUnknown?: boolean
 }
 
 export async function putMedia(

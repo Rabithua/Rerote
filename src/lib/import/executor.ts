@@ -89,11 +89,14 @@ export async function executeImport(options: ExecuteImportOptions) {
         )
           throw new ImportFailure('invalid_import_plan')
         const wanted = new Set(plan.noteIndexes)
-        batch.forEach((note, index) =>
-          wanted.has(index)
-            ? candidates.push(note)
-            : report(note, { status: 'skipped', stage: 'plan' }),
-        )
+        batch.forEach((note, index) => {
+          if (wanted.has(index)) candidates.push(note)
+          else {
+            const tracked = resources.get(note.id)
+            if (tracked) tracked.commitUnknown = false
+            report(note, { status: 'skipped', stage: 'plan' })
+          }
+        })
       } catch (error) {
         if (signal.aborted) throw error
         batch.forEach((note) =>
@@ -114,7 +117,8 @@ export async function executeImport(options: ExecuteImportOptions) {
         resources.set(note.id, tracked)
         let stage: ImportStage = 'cleanup'
         try {
-          if (!(await cleanupResources(api, tracked)))
+          // Unknown commits retain their uploads until a subsequent source check or commit confirms the outcome.
+          if (!tracked.commitUnknown && !(await cleanupResources(api, tracked)))
             throw new ImportFailure('cleanup_pending', 'cleanup')
           if (note.attachments.length > api.info.capabilities.maxAttachments)
             throw new ImportFailure('attachment_count_exceeded', 'encode')
@@ -142,7 +146,9 @@ export async function executeImport(options: ExecuteImportOptions) {
           }
           ready.push({ ...note, attachments: uploaded })
         } catch (error) {
-          const cleaned = await cleanupResources(api, tracked)
+          const cleaned = tracked.commitUnknown
+            ? false
+            : await cleanupResources(api, tracked)
           if (signal.aborted) throw error
           const failure =
             error instanceof ImportFailure
@@ -160,8 +166,17 @@ export async function executeImport(options: ExecuteImportOptions) {
       if (!ready.length) continue
       signal.throwIfAborted()
       options.onProgress({ completed, total: notes.length, stage: 'commit' })
+      ready.forEach((note) => {
+        const tracked = resources.get(note.id)
+        if (tracked && (tracked.ids.length || tracked.reservations.length))
+          tracked.commitUnknown = true
+      })
       try {
-        const committed = await api.commit(payload(ready), signal)
+        // Cancellation stops the next batch; an accepted commit finishes so cleanup cannot race its transaction.
+        const committed = await api.commit(
+          payload(ready),
+          AbortSignal.timeout(30000),
+        )
         if (
           !Array.isArray(committed.results) ||
           committed.results.length !== ready.length ||
@@ -175,6 +190,10 @@ export async function executeImport(options: ExecuteImportOptions) {
           )
         )
           throw new ImportFailure('commit_result_unknown')
+        ready.forEach((note) => {
+          const tracked = resources.get(note.id)
+          if (tracked) tracked.commitUnknown = false
+        })
         committed.results.forEach((result) =>
           report(ready[result.index], {
             status: result.status,
@@ -198,7 +217,11 @@ export async function executeImport(options: ExecuteImportOptions) {
   } finally {
     for (const note of notes) {
       const tracked = resources.get(note.id)
-      const cleaned = tracked ? await cleanupResources(api, tracked) : true
+      const cleaned = tracked?.commitUnknown
+        ? false
+        : tracked
+          ? await cleanupResources(api, tracked)
+          : true
       if (cleaned) resources.delete(note.id)
       const existing = results.get(note.id)
       if (!existing)

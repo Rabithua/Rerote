@@ -163,6 +163,33 @@ function harness(notes: Array<RoteNote>) {
 }
 
 describe('formal import executor', () => {
+  test('cancellation during an accepted commit waits for its result before cleanup', async () => {
+    const run = harness([note(1, 1)])
+    vi.mocked(run.api.commit).mockImplementation((_payload, signal) => {
+      run.controller.abort()
+      expect(signal.aborted).toBe(false)
+      return Promise.resolve({
+        results: [{ index: 0, id: 'target', status: 'created' }],
+      })
+    })
+    await executeImport(run.options)
+    expect(run.options.onResult).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'created' }),
+    )
+    expect(run.options.resources.size).toBe(0)
+  })
+  test('a lost commit response retains uploads until retry confirms the source exists', async () => {
+    const run = harness([note(1, 1)])
+    vi.mocked(run.api.commit).mockRejectedValue(new Error('Connection lost'))
+    await executeImport(run.options)
+    expect(run.options.resources.get('1')?.commitUnknown).toBe(true)
+    expect(run.api.cleanup).not.toHaveBeenCalled()
+    expect(run.api.cancelReservation).not.toHaveBeenCalled()
+    vi.mocked(run.api.plan).mockResolvedValue({ noteIndexes: [] })
+    await executeImport(run.options)
+    expect(run.api.cleanup).toHaveBeenCalledWith(['attachment-0'])
+    expect(run.options.resources.size).toBe(0)
+  })
   test('plans everything before downloads, skips known sources and submits at most 50', async () => {
     const run = harness(Array.from({ length: 103 }, (_, index) => note(index)))
     await executeImport(run.options)

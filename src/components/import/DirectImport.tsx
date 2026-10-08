@@ -49,7 +49,7 @@ export function DirectImport({
       controller.current?.abort()
       if (client)
         for (const tracked of resources.current.values())
-          void cleanupResources(client, tracked)
+          if (!tracked.commitUnknown) void cleanupResources(client, tracked)
     },
     [client],
   )
@@ -279,7 +279,8 @@ export function DirectImport({
                   key={item.noteId}
                   className="text-xs text-muted-foreground break-words"
                 >
-                  {t(`direct.statuses.${item.status}`)} · {item.title}{' '}
+                  {t(`direct.statuses.${item.status}`)} ·{' '}
+                  {item.title || t('direct.imageOnly')}{' '}
                   {item.error ? `· ${importErrorText(item.error, t)}` : ''}{' '}
                   {item.stage ? `· ${t(`direct.stages.${item.stage}`)}` : ''}{' '}
                   {item.attachmentIndex !== undefined
