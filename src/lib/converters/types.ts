@@ -16,7 +16,7 @@ export interface SQLiteSourceData {
   sourceAccount?: string
 }
 
-export type ImportProvider = 'flomo' | 'memos' | 'weread'
+export type ImportProvider = 'flomo' | 'memos' | 'weread' | 'dinox'
 
 export interface RoteImportSource {
   provider: ImportProvider
@@ -161,7 +161,7 @@ export interface RoteNote {
   pin: boolean
   editor: string
   createdAt: string
-  updatedAt: string
+  updatedAt?: string
   author: {
     username: string
     nickname: string
@@ -180,6 +180,7 @@ export interface RoteAttachment {
   roteid: string
   storage: string
   details: {
+    [key: string]: unknown
     key: string
     size: number
     mtime: string
@@ -199,6 +200,7 @@ export interface ConversionResult {
   warnings: Array<string>
   stats: {
     total: number
+    skipped?: number
     converted: number
     failed: number
     localAttachmentsSkipped: number

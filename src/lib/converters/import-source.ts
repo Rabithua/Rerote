@@ -1,10 +1,6 @@
 import { v5 as uuidv5 } from 'uuid'
 
-import type {
-  ImportProvider,
-  RoteImportSource,
-  RoteNote,
-} from './types'
+import type { ImportProvider, RoteImportSource, RoteNote } from './types'
 
 const REROTE_IMPORT_NAMESPACE = 'b16f48bc-4fb8-5a62-95e9-dc1b0c62f034'
 
@@ -75,10 +71,12 @@ export function dedupeNotesBySource(notes: Array<RoteNote>): Array<RoteNote> {
 
 function isNewer(candidate: RoteNote, existing: RoteNote): boolean {
   const candidateTime = Date.parse(
-    candidate.source.sourceUpdatedAt ?? candidate.updatedAt,
+    candidate.source.sourceUpdatedAt ??
+      candidate.updatedAt ??
+      candidate.createdAt,
   )
   const existingTime = Date.parse(
-    existing.source.sourceUpdatedAt ?? existing.updatedAt,
+    existing.source.sourceUpdatedAt ?? existing.updatedAt ?? existing.createdAt,
   )
 
   return (
