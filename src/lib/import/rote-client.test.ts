@@ -52,19 +52,20 @@ describe('instance connection contract', () => {
     )
     expect(client.info.owner.id).toBe('owner')
     expect(fetch).toHaveBeenCalledWith(
-      'https://example.test/v2/api/openkey/imports/connect',
+      'https://example.test/v2/api/openkey/permissions',
       expect.objectContaining({
         credentials: 'omit',
         redirect: 'error',
         referrerPolicy: 'no-referrer',
         cache: 'no-store',
-        body: '{}',
+        method: 'GET',
         headers: {
           Authorization: 'Bearer fixture-secret',
           'Content-Type': 'application/json',
         },
       }),
     )
+    expect(fetch.mock.calls[0][1]).not.toHaveProperty('body')
   })
   test('reports old instances, malformed capabilities and blocked CORS explicitly', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404 }))
@@ -75,6 +76,19 @@ describe('instance connection contract', () => {
         'fixture-secret',
         new AbortController().signal,
       )
+    await expect(connect()).rejects.toThrow('instance_upgrade_required')
+    fetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 0,
+          data: {
+            permissions: ['GETROTE'],
+            ownerId: 'owner',
+            capabilities: { noteCreateIdempotency: 1 },
+          },
+        }),
+      ),
+    )
     await expect(connect()).rejects.toThrow('instance_upgrade_required')
     fetch.mockResolvedValue(
       new Response(
@@ -110,5 +124,27 @@ describe('instance connection contract', () => {
         new AbortController().signal,
       ),
     ).rejects.toThrow('[redacted] is invalid')
+  })
+  test('distinguishes a restricted OpenKey from an old instance', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              code: 0,
+              data: { ...info, permissions: ['GETROTE'] },
+            }),
+          ),
+        ),
+    )
+    await expect(
+      RoteClient.connect(
+        'https://example.test',
+        'fixture-secret',
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow('openkey_permission_required:SENDROTE')
   })
 })

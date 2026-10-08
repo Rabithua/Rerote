@@ -41,9 +41,10 @@ export class RoteClient implements ImportApi {
       openKey.trim(),
     )
     const info = await client.request<Partial<InstanceInfo>>(
-      '/imports/connect',
-      {},
+      '/permissions',
+      undefined,
       AbortSignal.any([signal, AbortSignal.timeout(30000)]),
+      'GET',
     )
     const caps = info.capabilities
     if (
@@ -72,12 +73,14 @@ export class RoteClient implements ImportApi {
       ) ||
       !info.owner?.id ||
       typeof info.owner.username !== 'string' ||
-      !Array.isArray(info.permissions) ||
-      !['GETROTE', 'SENDROTE'].every((permission) =>
-        info.permissions?.includes(permission),
-      )
+      !Array.isArray(info.permissions)
     )
       throw new ImportFailure('instance_upgrade_required')
+    const missing = ['GETROTE', 'SENDROTE'].find(
+      (permission) => !info.permissions?.includes(permission),
+    )
+    if (missing)
+      throw new ImportFailure(`openkey_permission_required:${missing}`)
     client.info = info as InstanceInfo
     return client
   }
@@ -107,7 +110,7 @@ export class RoteClient implements ImportApi {
       if (signal?.aborted) throw error
       throw new ImportFailure('network_or_cors')
     }
-    if (response.status === 404 && path === '/imports/connect')
+    if (response.status === 404 && path === '/permissions')
       throw new ImportFailure('instance_upgrade_required')
     const body = (await response.json().catch(() => null)) as {
       code?: number
